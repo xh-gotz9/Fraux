@@ -6,7 +6,7 @@ FLAGS = -g
 
 BUILD_CMD = $(CC) $(FLAGS) $? -o $(BUILD_DIR)/$@	
 
-all: buildDir test executable clean
+all: buildDir test executable
 
 buildDir:
 	mkdir -p $(BUILD_DIR)
@@ -15,7 +15,7 @@ executable:
 	chmod +x -R $(BUILD_DIR)
 
 clean:
-	rm *.o
+	rm -rf build
 
 bencoding.o: bencoding.h bencoding.c
 parser.o: parser.h parser.c bencoding.o
