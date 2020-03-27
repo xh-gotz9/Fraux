@@ -25,19 +25,21 @@ parser_buffer *create_parser_buffer(char *src)
 bencoding_node *parse_node(parser_buffer *buffer)
 {
     int depth = 0;
-    bencoding_node *root = NULL, *parent = NULL /* parent 作为双向链表记录每层*/, *dict_tmp = NULL;
+    bencoding_node *root = NULL,
+                   *parent = NULL /* parent 作为双向链表记录每层*/,
+                   *dict_tmp = NULL;
 
     while (buffer->offset < buffer->len)
     {
         char *head = buffer->data + buffer->offset;
         char *tail = head;
         bencoding_node *tmp = NULL;
-        if (*head >= '0' && *head <= '9') // 匹配数字
+        if (*head >= '0' && *head <= '9')
         {
             // T_STR
             tmp = parse_node_str(buffer);
         }
-        else // 匹配其他
+        else
         {
             switch (*head)
             {
@@ -69,11 +71,10 @@ bencoding_node *parse_node(parser_buffer *buffer)
             default:
                 // FAILED
                 printf("syntax error\n");
-                break;
+                exit(EXIT_FAILURE);
             }
         }
 
-        // TODO add to parrent
         if (parent == NULL)
         {
             root = parent = tmp;
@@ -81,43 +82,42 @@ bencoding_node *parse_node(parser_buffer *buffer)
         }
         else
         {
-            bencoding_node *h;
-            // 将 node 放入 parent
+            bencoding_node *node_ptr;
             switch (parent->type)
             {
             case T_LIST:
-                h = parent->list_node_head;
-                if (h == NULL)
+                node_ptr = parent->list_node_head;
+                if (node_ptr == NULL)
                 {
                     parent->list_node_head = tmp;
                 }
                 else
                 {
-                    while (h->next)
+                    while (node_ptr->next)
                     {
-                        h = h->next;
+                        node_ptr = node_ptr->next;
                     }
-                    h->next = tmp;
-                    tmp->prev = h;
+                    node_ptr->next = tmp;
+                    tmp->prev = node_ptr;
                 }
                 break;
             case T_DICT:
                 if (dict_tmp != NULL)
                 {
                     dict_tmp->val = tmp;
-                    h = parent->dict_node_head;
-                    if (h == NULL)
+                    node_ptr = parent->dict_node_head;
+                    if (node_ptr == NULL)
                     {
                         parent->dict_node_head = tmp;
                     }
                     else
                     {
-                        while (h->next != NULL)
+                        while (node_ptr->next != NULL)
                         {
-                            h = h->next;
+                            node_ptr = node_ptr->next;
                         }
-                        h->next = tmp;
-                        tmp->prev = h;
+                        node_ptr->next = tmp;
+                        tmp->prev = node_ptr;
                     }
 
                     dict_tmp = NULL;
@@ -138,18 +138,16 @@ bencoding_node *parse_node(parser_buffer *buffer)
                     parent = parent->prev;
                 }
 
-                // TODO set error info
+                // TODO: set error info
                 return NULL;
             }
             switch (tmp->type)
             {
             case T_LIST:
             case T_DICT:
-                // 新一层
                 parent->next = tmp;
                 tmp->prev = parent;
                 parent = tmp;
-
                 break;
             }
         }
@@ -164,13 +162,11 @@ bencoding_node *parse_node_str(parser_buffer *buffer)
     char *tail = head;
 
     bencoding_node *tmp;
-    // 扫描 ':'
     while (*tail != ':')
     {
         tail++;
     }
 
-    // read length of str
     strncpy(buf, head, tail - head);
     buf[tail - head] = 0;
     int val;
@@ -180,11 +176,9 @@ bencoding_node *parse_node_str(parser_buffer *buffer)
     strncpy(data, tail + 1, val);
     data[val] = 0;
 
-    // create node
     tmp = create_node(T_STR);
     tmp->str = data;
 
-    // set offset
     buffer->offset = (tail + 1 + val) - buffer->data;
 
     return tmp;

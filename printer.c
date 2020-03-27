@@ -8,7 +8,7 @@
 static int realloc_print_buffer(print_buffer *buffer, size_t target);
 
 /**
- * check buffer pointer, buffer->magic and buffer->buf pointer.
+ * 检查 buffer, buffer->magic 以及 buffer->buf.
  **/
 static void ensure(print_buffer *buffer)
 {
@@ -32,10 +32,15 @@ print_buffer *create_print_buffer()
     /* 每次为 buf 预留一位终止符号位 */
     size_t buf_size = _BASE_BUFFER_SIZE;
     char *ptr = malloc(sizeof(char) * (buf_size + 1));
+    if (ptr == NULL)
+    {
+        perror("malloc error");
+        exit(EXIT_FAILURE);
+    }
+
     memset(ptr, 0, sizeof(char) * (buf_size + 1));
     buffer->buf = ptr;
 
-    // TODO error check
     buffer->length = 0;
     buffer->size = _BASE_BUFFER_SIZE;
     buffer->magic = PRINT_BUFFER_MAGICNUM;
@@ -77,7 +82,7 @@ print_buffer *write_print_buffer(print_buffer *buffer, void *data, size_t len)
 
     strncpy(buffer->buf + buffer->length, data, len);
     buffer->length += len;
-    /* add terminating char */
+    /* 添加终止符号 */
     buffer->buf[buffer->length] = 0;
 
     return buffer;
