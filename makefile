@@ -17,12 +17,12 @@ executable:
 clean:
 	rm -rf build
 
-bencoding.o: bencoding.h bencoding.c
-parser.o: parser.h parser.c bencoding.o
+bencode.o: bencode.h bencode.c
+parser.o: parser.h parser.c bencode.o
 
 test.o: test.c
 
-test: bencoding.h bencoding.c parser.h parser.c test.c printer.h printer.c
+test: bencode.h bencode.c parser.h parser.c test.c printer.h printer.c
 	$(BUILD_CMD) -D_CHECK_DATA
 
 check:

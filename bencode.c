@@ -1,18 +1,18 @@
 #include <string.h>
 
-#include "bencoding.h"
+#include "bencode.h"
 
-bencoding_node *create_node(int type)
+bencode_node *create_node(int type)
 {
-    bencoding_node *node = NULL;
+    bencode_node *node = NULL;
 
-    node = malloc(sizeof(bencoding_node));
+    node = malloc(sizeof(bencode_node));
     node->type = type;
 
     return node;
 }
 
-char *print_node(bencoding_node *node, char *dest)
+char *print_node(bencode_node *node, char *dest)
 {
     int mode = 1;
     if (node == NULL)

@@ -3,7 +3,7 @@
 #include <string.h>
 
 #include "parser.h"
-#include "bencoding.h"
+#include "bencode.h"
 
 extern char buf[];
 
@@ -22,10 +22,10 @@ parser_buffer *create_parser_buffer(char *src)
     return buffer;
 }
 
-bencoding_node *parse_node(parser_buffer *buffer)
+bencode_node *parse_node(parser_buffer *buffer)
 {
     int depth = 0;
-    bencoding_node *root = NULL,
+    bencode_node *root = NULL,
                    *parent = NULL /* parent 作为双向链表记录每层*/,
                    *dict_tmp = NULL;
 
@@ -33,7 +33,7 @@ bencoding_node *parse_node(parser_buffer *buffer)
     {
         char *head = buffer->data + buffer->offset;
         char *tail = head;
-        bencoding_node *tmp = NULL;
+        bencode_node *tmp = NULL;
         if (*head >= '0' && *head <= '9')
         {
             // T_STR
@@ -82,7 +82,7 @@ bencoding_node *parse_node(parser_buffer *buffer)
         }
         else
         {
-            bencoding_node *node_ptr;
+            bencode_node *node_ptr;
             switch (parent->type)
             {
             case T_LIST:
@@ -156,12 +156,12 @@ bencoding_node *parse_node(parser_buffer *buffer)
     return root;
 }
 
-bencoding_node *parse_node_str(parser_buffer *buffer)
+bencode_node *parse_node_str(parser_buffer *buffer)
 {
     char *head = buffer->data + buffer->offset;
     char *tail = head;
 
-    bencoding_node *tmp;
+    bencode_node *tmp;
     while (*tail != ':')
     {
         tail++;
@@ -184,12 +184,12 @@ bencoding_node *parse_node_str(parser_buffer *buffer)
     return tmp;
 }
 
-bencoding_node *parse_node_num(parser_buffer *buffer)
+bencode_node *parse_node_num(parser_buffer *buffer)
 {
     char *head = buffer->data + buffer->offset;
     char *tail = head;
 
-    bencoding_node *tmp;
+    bencode_node *tmp;
 
     while ((*tail) != 'e')
     {

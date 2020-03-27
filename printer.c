@@ -65,6 +65,7 @@ int destroy_print_buffer_all(print_buffer *buffer)
     }
 
     free(ptr);
+    return 0;
 }
 
 print_buffer *write_print_buffer(print_buffer *buffer, void *data, size_t len)

@@ -1,12 +1,12 @@
 #include <string.h>
 
-#include "bencoding.h"
+#include "bencode.h"
 #include "parser.h"
 #include "printer.h"
 
 int create_node_test()
 {
-    bencoding_node *node = create_node(T_STR);
+    bencode_node *node = create_node(T_STR);
     if (node->type != T_STR)
     {
         printf("create node error");
@@ -37,7 +37,7 @@ int parse_data_list_only()
 {
     char *data = "l3:cow3:moo4:spam4:eggse";
     parser_buffer *buffer = create_parser_buffer(data);
-    bencoding_node *node = parse_node(buffer);
+    bencode_node *node = parse_node(buffer);
     if (!node)
     {
         return -1;
