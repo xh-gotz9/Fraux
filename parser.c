@@ -26,12 +26,33 @@ parser_buffer *create_parser_buffer(const char *src)
     return buffer;
 }
 
+typedef struct bencode_node_list_node
+{
+    bencode_node *data;
+    struct bencode_node_list_node *prev;
+    struct bencode_node_list_node *next;
+} bencode_node_list_node;
+
+bencode_node_list_node *create_list_node()
+{
+    bencode_node_list_node *node = malloc(sizeof(bencode_node_list_node));
+    if (node == NULL)
+    {
+        perror("malloc error");
+        exit(EXIT_FAILURE);
+    }
+    memset(node, 0, sizeof(bencode_node_list_node));
+
+    return node;
+}
+
 bencode_node *parse_node(parser_buffer *buffer)
 {
     int depth = 0;
-    bencode_node *root = NULL,
-                 *parent = NULL /* parent 作为双向链表记录每层*/,
-                 *dict_tmp = NULL; /* dic_tmp 记录解析时未存入 DICT 的 DICT_NODE 节点*/
+    bencode_node *dict_tmp = NULL; /* dic_tmp 记录解析时未存入 DICT 的 DICT_NODE 节点*/
+
+    bencode_node_list_node *root = NULL,
+                           *parent = NULL; /* parent 作为双向链表记录每层*/
 
     while (buffer->offset < buffer->len)
     {
@@ -65,18 +86,20 @@ bencode_node *parse_node(parser_buffer *buffer)
                 // end of parent "LIST" or "DICT"
                 if (depth == 1)
                 {
-                    return root;
+                    return root->data;
                 }
                 else
                 {
                     parent = parent->prev;
-                    parent->prev->prev = NULL;
-                    parent->prev->next = NULL;
+
+                    // TODO free memory
+                    parent->next->prev = NULL;
+
                     parent->next = NULL;
                 }
                 buffer->offset++;
                 depth--;
-                break;
+                continue;
             default:
                 // FAILED
                 printf("syntax error\n");
@@ -86,39 +109,27 @@ bencode_node *parse_node(parser_buffer *buffer)
 
         if (parent == NULL)
         {
-            root = parent = tmp;
+            root = parent = create_list_node();
+            parent->data = tmp;
             depth = 1;
         }
         else
         {
             bencode_node *node_ptr;
-            switch (parent->type)
+            switch (parent->data->type)
             {
             case T_LIST:
-                node_ptr = parent->list_node_head;
-                if (node_ptr == NULL)
-                {
-                    parent->list_node_head = tmp;
-                }
-                else
-                {
-                    while (node_ptr->next)
-                    {
-                        node_ptr = node_ptr->next;
-                    }
-                    node_ptr->next = tmp;
-                    tmp->prev = node_ptr;
-                }
+                bencode_list_add(parent->data, tmp);
                 break;
             case T_DICT:
                 if (dict_tmp != NULL)
                 {
                     dict_tmp->val = tmp;
 
-                    node_ptr = parent->dict_node_head;
+                    node_ptr = parent->data->dict_node_head;
                     if (node_ptr == NULL)
                     {
-                        parent->dict_node_head = dict_tmp;
+                        parent->data->dict_node_head = dict_tmp;
                     }
                     else
                     {
@@ -149,15 +160,18 @@ bencode_node *parse_node(parser_buffer *buffer)
             {
             case T_LIST:
             case T_DICT:
-                parent->next = tmp;
-                tmp->prev = parent;
-                parent = tmp;
+                parent->next = create_list_node();
+                parent->next->data = tmp;
+
+                parent->next->prev = parent;
+                parent = parent->next;
+                depth++;
                 break;
             }
         }
     }
 
-    return root;
+    return root->data;
 }
 
 static bencode_node *parse_node_str(parser_buffer *buffer)

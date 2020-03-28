@@ -176,7 +176,6 @@ char *print_bencode_node(bencode_node *node, print_buffer *out)
         destroy_print_buffer_info(buffer, &data);
 #ifdef DEBUG
         printf("%s\n", data);
-
 #endif
         return data;
     }

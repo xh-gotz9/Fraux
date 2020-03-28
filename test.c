@@ -134,6 +134,36 @@ static int parse_data_test(const char *data, const char *res)
     return strcmp(print_bencode_node(node, 0), res) == 0 ? 0 : -1;
 }
 
+int parse_data_from_file()
+{
+    int fd = open("./test.torrent", O_RDWR);
+    if (fd == -1)
+    {
+        perror("open error");
+        exit(EXIT_FAILURE);
+    }
+    struct stat stat;
+    if (fstat(fd, &stat) == -1)
+    {
+        perror("fstat error");
+        exit(EXIT_FAILURE);
+    }
+    off_t len = stat.st_size;
+    char *ptr = mmap(NULL, (size_t)len + 1, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0);
+
+    ptr[len] = 0;
+
+    parser_buffer *buffer = create_parser_buffer(ptr);
+    bencode_node *node = parse_node(buffer);
+    munmap(ptr, len + 1);
+
+    if (print_bencode_node(node, 0) != NULL)
+    {
+        return 0;
+    }
+    return -1;
+}
+
 #define PARSE_DATA_TEST(DATA, CHECK) parse_data_test(DATA, CHECK)
 
 int main(int argc, char *argv[])
@@ -147,6 +177,8 @@ int main(int argc, char *argv[])
     ASSERT_RESULT(PARSE_DATA_TEST("5:abcde", "\"abcde\""), 0);
     ASSERT_RESULT(PARSE_DATA_TEST("l3:cow3:moo4:spam4:eggse", "[\"cow\",\"moo\",\"spam\",\"eggs\"]"), 0);
     ASSERT_RESULT(PARSE_DATA_TEST("d3:key3:vale", "{\"key\":\"val\"}"), 0);
+
+    ASSERT_RESULT(parse_data_from_file(), 0);
 
     return 0;
 }

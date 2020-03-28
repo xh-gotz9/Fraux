@@ -39,4 +39,6 @@ typedef struct bencode_node
 
 bencode_node *create_node(int type);
 
+int bencode_list_add(bencode_node *list, bencode_node *node);
+
 #endif // __BENCODE_H__
