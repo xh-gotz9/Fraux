@@ -5,9 +5,13 @@
 #include "parser.h"
 #include "bencode.h"
 
-extern char buf[];
+char buf[BUFSIZ + 1];
 
-parser_buffer *create_parser_buffer(char *src)
+static bencode_node *parse_node_str(parser_buffer *buffer);
+
+static bencode_node *parse_node_num(parser_buffer *buffer);
+
+parser_buffer *create_parser_buffer(const char *src)
 {
     if (src == NULL)
     {
@@ -26,13 +30,13 @@ bencode_node *parse_node(parser_buffer *buffer)
 {
     int depth = 0;
     bencode_node *root = NULL,
-                   *parent = NULL /* parent 作为双向链表记录每层*/,
-                   *dict_tmp = NULL;
+                 *parent = NULL /* parent 作为双向链表记录每层*/,
+                 *dict_tmp = NULL; /* dic_tmp 记录解析时未存入 DICT 的 DICT_NODE 节点*/
 
     while (buffer->offset < buffer->len)
     {
-        char *head = buffer->data + buffer->offset;
-        char *tail = head;
+        const char *head = buffer->data + buffer->offset,
+                   *tail = head;
         bencode_node *tmp = NULL;
         if (*head >= '0' && *head <= '9')
         {
@@ -58,7 +62,7 @@ bencode_node *parse_node(parser_buffer *buffer)
                 buffer->offset++;
                 break;
             case 'e':
-                // end of parent
+                // end of parent "LIST" or "DICT"
                 if (depth == 1)
                 {
                     return root;
@@ -66,8 +70,13 @@ bencode_node *parse_node(parser_buffer *buffer)
                 else
                 {
                     parent = parent->prev;
+                    parent->prev->prev = NULL;
+                    parent->prev->next = NULL;
+                    parent->next = NULL;
                 }
                 buffer->offset++;
+                depth--;
+                break;
             default:
                 // FAILED
                 printf("syntax error\n");
@@ -105,10 +114,11 @@ bencode_node *parse_node(parser_buffer *buffer)
                 if (dict_tmp != NULL)
                 {
                     dict_tmp->val = tmp;
+
                     node_ptr = parent->dict_node_head;
                     if (node_ptr == NULL)
                     {
-                        parent->dict_node_head = tmp;
+                        parent->dict_node_head = dict_tmp;
                     }
                     else
                     {
@@ -116,10 +126,9 @@ bencode_node *parse_node(parser_buffer *buffer)
                         {
                             node_ptr = node_ptr->next;
                         }
-                        node_ptr->next = tmp;
-                        tmp->prev = node_ptr;
+                        node_ptr->next = dict_tmp;
+                        dict_tmp->prev = node_ptr;
                     }
-
                     dict_tmp = NULL;
                 }
                 else
@@ -132,15 +141,10 @@ bencode_node *parse_node(parser_buffer *buffer)
             case T_NUM:
             default:
                 printf("syntax error\n");
-                while (parent != NULL)
-                {
-                    print_node(parent, NULL);
-                    parent = parent->prev;
-                }
-
                 // TODO: set error info
                 return NULL;
             }
+
             switch (tmp->type)
             {
             case T_LIST:
@@ -156,10 +160,10 @@ bencode_node *parse_node(parser_buffer *buffer)
     return root;
 }
 
-bencode_node *parse_node_str(parser_buffer *buffer)
+static bencode_node *parse_node_str(parser_buffer *buffer)
 {
-    char *head = buffer->data + buffer->offset;
-    char *tail = head;
+    const char *head = buffer->data + buffer->offset,
+               *tail = head;
 
     bencode_node *tmp;
     while (*tail != ':')
@@ -184,10 +188,10 @@ bencode_node *parse_node_str(parser_buffer *buffer)
     return tmp;
 }
 
-bencode_node *parse_node_num(parser_buffer *buffer)
+static bencode_node *parse_node_num(parser_buffer *buffer)
 {
-    char *head = buffer->data + buffer->offset;
-    char *tail = head;
+    const char *head = buffer->data + buffer->offset,
+               *tail = head;
 
     bencode_node *tmp;
 

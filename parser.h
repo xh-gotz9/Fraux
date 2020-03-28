@@ -5,20 +5,15 @@
 
 #include "bencode.h"
 
-char buf[BUFSIZ + 1];
-
 typedef struct parser_buffer
 {
-    char *data;
+    const char *data;
     size_t len;
     size_t offset;
 } parser_buffer;
 
-parser_buffer *create_parser_buffer(char *src);
+parser_buffer *create_parser_buffer(const char *src);
 
 bencode_node *parse_node(parser_buffer *buffer);
 
-bencode_node *parse_node_str(parser_buffer *buffer);
-
-bencode_node *parse_node_num(parser_buffer *buffer);
 #endif

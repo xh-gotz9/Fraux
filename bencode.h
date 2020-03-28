@@ -39,8 +39,4 @@ typedef struct bencode_node
 
 bencode_node *create_node(int type);
 
-bencode_node *parse_data(const char *data);
-
-char *print_node(bencode_node *node, char *dest);
-
 #endif // __BENCODE_H__

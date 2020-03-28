@@ -5,8 +5,8 @@
 
 #include "bencode.h"
 
-#ifndef _BASE_BUFFER_SIZE
-#define _BASE_BUFFER_SIZE 128;
+#ifndef BASE_BUFFER_SIZE
+#define BASE_BUFFER_SIZE 128
 #endif
 
 #ifndef PRINT_BUFFER_MAGICNUM
@@ -23,7 +23,7 @@ typedef struct print_buffer
 
 print_buffer *create_print_buffer();
 
-int destroy_print_buffer_info(print_buffer *buffer);
+int destroy_print_buffer_info(print_buffer *buffer, char **str);
 
 int destroy_print_buffer_all(print_buffer *buffer);
 
@@ -31,6 +31,6 @@ print_buffer *write_print_buffer(print_buffer *buffer, void *data, size_t len);
 
 const char *out_print_buffer(print_buffer *buffer);
 
-char *print_bencode_node(bencode_node *node);
+char *print_bencode_node(bencode_node *node, print_buffer *out);
 
 #endif

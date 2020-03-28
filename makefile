@@ -2,9 +2,9 @@ BUILD_DIR = ./build/
 
 CC = gcc
 
-FLAGS = -g
+DEBUG = -g -DDEBUG
 
-BUILD_CMD = $(CC) $(FLAGS) $? -o $(BUILD_DIR)/$@	
+BUILD_CMD = $(CC) $(DEBUG) $? -o $(BUILD_DIR)/$@	
 
 all: buildDir test executable
 
