@@ -18,8 +18,7 @@ static void ensure(print_buffer *buffer)
     {
         return;
     }
-    fprintf(stderr, "WARNING - try to destroy a memory which is not \"struct print_buffer\" data.\n");
-    exit(EXIT_FAILURE);
+    LOG_DBG("WARNING - try to destroy a memory which is not \"struct print_buffer\" data.\n");
 }
 
 print_buffer *create_print_buffer()
@@ -27,8 +26,8 @@ print_buffer *create_print_buffer()
     print_buffer *buffer = malloc(sizeof(print_buffer));
     if (buffer == NULL)
     {
-        perror("malloc error");
-        exit(EXIT_FAILURE);
+        LOG_DBG(strerror(errno));
+        return NULL;
     }
 
     /* 每次为 buf 预留一位终止符号位 */
@@ -36,8 +35,8 @@ print_buffer *create_print_buffer()
     char *ptr = malloc(sizeof(char) * (buf_size + 1));
     if (ptr == NULL)
     {
-        perror("malloc error");
-        exit(EXIT_FAILURE);
+        LOG_DBG(strerror(errno));
+        return NULL;
     }
 
     memset(ptr, 0, sizeof(char) * (buf_size + 1));
@@ -108,8 +107,9 @@ static int realloc_print_buffer(print_buffer *buffer, size_t target)
     char *ptr = realloc(buffer->buf, new_size + 1);
     if (ptr == NULL)
     {
-        perror("realloc error");
-        exit(EXIT_FAILURE);
+        LOG_DBG("realloc error");
+        LOG_DBG(strerror(errno));
+        return -1;
     }
 
     buffer->buf = ptr;
@@ -167,8 +167,8 @@ char *print_bencode_node(bencode_node *node, print_buffer *out)
         break;
     default:
         // error: 非法数据
-        perror("print error");
-        exit(EXIT_FAILURE);
+        LOG_DBG("error data with unknown type");
+        return NULL;
     }
     if (out == NULL)
     {

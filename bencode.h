@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <sys/types.h>
 
+#include "dbg.h"
+
 /* data type */
 #define T_STR 0
 #define T_NUM 1
