@@ -2,8 +2,8 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "parser.h"
 #include "bencode.h"
+#include "parser.h"
 
 char buf[BUFSIZ + 1];
 
@@ -119,7 +119,10 @@ bencode_node *parse_node(parser_buffer *buffer)
             switch (parent->data->type)
             {
             case T_LIST:
-                bencode_list_add(parent->data, tmp);
+                if (bencode_list_add(parent->data, tmp) == -1)
+                {
+                    return NULL;
+                }
                 break;
             case T_DICT:
                 if (dict_tmp != NULL)
@@ -145,6 +148,13 @@ bencode_node *parse_node(parser_buffer *buffer)
                 else
                 {
                     dict_tmp = create_node(T_DICT_NODE);
+                    if (tmp->type != T_STR)
+                    {
+                        LOG_DBG("Syntax Error: wrong type of dict_node's key");
+                        // TODO set error info: syntax error
+                        return NULL;
+                    }
+
                     dict_tmp->key = tmp;
                 }
                 break;
