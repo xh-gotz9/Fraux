@@ -50,6 +50,7 @@ int bencode_cmp(const bencode_node *a, const bencode_node *b)
     case T_DICT:
         return a - b;
     default:
+        LOG_DBG("unsupport type");
         // TODO error unsupport type
         break;
     }
@@ -61,9 +62,7 @@ int bencode_list_add(bencode_node *list, bencode_node *node)
 {
     if (list == NULL || !(list->type != T_LIST || list->type != T_DICT) || node == NULL)
     {
-#ifdef DEBUG
-        perror("bencode list add error");
-#endif
+        LOG_DBG("var error");
         return -1;
     }
 

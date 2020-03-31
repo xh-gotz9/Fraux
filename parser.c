@@ -38,8 +38,8 @@ bencode_node_list_node *create_list_node()
     bencode_node_list_node *node = malloc(sizeof(bencode_node_list_node));
     if (node == NULL)
     {
-        perror("malloc error");
-        exit(EXIT_FAILURE);
+        LOG_DBG("malloc error");
+        return NULL;
     }
     memset(node, 0, sizeof(bencode_node_list_node));
 
@@ -101,9 +101,9 @@ bencode_node *parse_node(parser_buffer *buffer)
                 depth--;
                 continue;
             default:
-                // FAILED
-                printf("syntax error\n");
-                exit(EXIT_FAILURE);
+                LOG_DBG("syntax error");
+                // TODO set error info: syntax error
+                return NULL;
             }
         }
 
@@ -151,8 +151,8 @@ bencode_node *parse_node(parser_buffer *buffer)
             case T_STR:
             case T_NUM:
             default:
-                printf("syntax error\n");
-                // TODO: set error info
+                LOG_DBG("syntax error");
+                // TODO: set error info: syntax error
                 return NULL;
             }
 
