@@ -27,7 +27,17 @@
         printf("%s test failed!\n", #CONDITION);  \
         exit(EXIT_FAILURE);                       \
     }
-
+    
+#define ASSERT_RESULT_NOT(CONDITION, RES)         \
+    if (CONDITION != RES)                         \
+    {                                             \
+        printf("%s test success!\n", #CONDITION); \
+    }                                             \
+    else                                          \
+    {                                             \
+        printf("%s test failed!\n", #CONDITION);  \
+        exit(EXIT_FAILURE);                       \
+    }
 // bencode.h tests
 int create_node_test()
 {
@@ -37,6 +47,102 @@ int create_node_test()
         printf("create node error");
         return -1;
     }
+    return 0;
+}
+
+int bencode_cmp_test()
+{
+    bencode_node *a = create_node(T_STR),
+                 *b = create_node(T_STR);
+
+    a->type = T_STR;
+    b->type = T_STR;
+    a->str = "data";
+    b->str = "data";
+
+    ASSERT_RESULT(bencode_cmp(a, a), 0); // a == b
+    ASSERT_RESULT(bencode_cmp(a, b), 0); //
+
+    b->type = T_NUM;
+    b->number = 32;
+    // a->type != b->type
+    ASSERT_RESULT_NOT(bencode_cmp(a, b), 0);
+
+    a->type = T_NUM;
+    a->number = 32;
+    ASSERT_RESULT(bencode_cmp(a, b), 0); // T_NUM test
+    a->number = 33;
+    ASSERT_RESULT_NOT(bencode_cmp(a, b), 0);
+
+    a->type = T_LIST;
+    b->type = T_LIST;
+    ASSERT_RESULT_NOT(bencode_cmp(a, b), 0); // different address
+    ASSERT_RESULT(bencode_cmp(a, a), 0);     // same address
+
+    a->type = T_DICT;
+    b->type = T_DICT;
+    ASSERT_RESULT_NOT(bencode_cmp(a, b), 0); // different address
+    ASSERT_RESULT(bencode_cmp(a, a), 0);     // same address
+
+    return 0;
+}
+
+int dict_find_test()
+{
+    // test
+    bencode_node *dict = create_node(T_DICT);
+
+    char *key_set[] = {"key1", "key2", "key3"};
+    char *val_set[] = {"val1", "val2", "val3"};
+    bencode_node *node, *key, *val;
+    int i = 0;
+    do
+    {
+        node = create_node(T_DICT_NODE);
+
+        key = create_node(T_STR);
+        key->str = key_set[i];
+
+        val = create_node(T_STR);
+        val->str = val_set[i];
+
+        node->key = key;
+        node->val = val;
+
+        if (dict->dict_node_head == NULL)
+        {
+            dict->dict_node_head = node;
+        }
+        else
+        {
+            bencode_node *target = dict->dict_node_head;
+
+            while (target->next != 0)
+            {
+                target = target->next;
+            }
+
+            target->next = node;
+            node->prev = target;
+
+        }
+
+        i++;
+    } while (i < 3);
+
+    bencode_node *res;
+    key = create_node(T_STR);
+
+    key->str = "key3";
+    bencode_dict_find(dict, key, &res);
+    ASSERT_RESULT_NOT(res, NULL);
+
+    key->str = "key4";
+    bencode_dict_find(dict, key, &res);
+    ASSERT_RESULT(res, NULL);
+
+    print_bencode_node(val, NULL);
+
     return 0;
 }
 
@@ -169,6 +275,8 @@ int parse_data_from_file()
 int main(int argc, char *argv[])
 {
     ASSERT_RESULT(create_node_test(), 0);
+    ASSERT_RESULT(bencode_cmp_test(), 0);
+    ASSERT_RESULT(dict_find_test(), 0);
 
     ASSERT_RESULT(write_print_buffer_test(), 0);
     ASSERT_RESULT(print_node_test(), 0);

@@ -39,6 +39,10 @@ typedef struct bencode_node
 
 bencode_node *create_node(int type);
 
+int bencode_cmp(const bencode_node *a, const bencode_node *b);
+
 int bencode_list_add(bencode_node *list, bencode_node *node);
+
+int bencode_dict_find(const bencode_node *dict, const bencode_node *key, bencode_node **value);
 
 #endif // __BENCODE_H__
