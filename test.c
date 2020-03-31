@@ -124,21 +124,18 @@ int dict_find_test()
 
             target->next = node;
             node->prev = target;
-
+            
         }
 
         i++;
     } while (i < 3);
 
     bencode_node *res;
-    key = create_node(T_STR);
 
-    key->str = "key3";
-    bencode_dict_find(dict, key, &res);
+    bencode_dict_find(dict, "key3", &res);
     ASSERT_RESULT_NOT(res, NULL);
 
-    key->str = "key4";
-    bencode_dict_find(dict, key, &res);
+    bencode_dict_find(dict, "key4", &res);
     ASSERT_RESULT(res, NULL);
 
     print_bencode_node(val, NULL);

@@ -43,7 +43,7 @@ int bencode_cmp(const bencode_node *a, const bencode_node *b)
     case T_NUM:
         return a->number - b->number;
 
-    // TODO 讨论是否如何进行比较
+    // TODO 讨论如何进行比较
     case T_DICT_NODE:
     // 仅支持地址比较
     case T_LIST:
@@ -88,10 +88,19 @@ int bencode_dict_add()
     return 0;
 }
 
-int bencode_dict_find(const bencode_node *dict, const bencode_node *key, bencode_node **value)
+int bencode_dict_find(const bencode_node *dict, const char *key, bencode_node **value)
 {
-    // TODO check type
-    // key's type always be T_STR
+    if (key == NULL)
+    {
+        LOG_DBG("NULL key");
+        return -1;
+    }
+    
+    if (dict->type != T_DICT)
+    {
+        // TODO set error info
+        return -1;
+    }
 
     bencode_node *head = dict->dict_node_head,
                  *ptr = head;
@@ -104,7 +113,7 @@ int bencode_dict_find(const bencode_node *dict, const bencode_node *key, bencode
 
     do
     {
-        if (bencode_cmp(ptr->key, key) == 0)
+        if (strcmp(ptr->key->str, key) == 0)
         {
             *value = ptr->val;
             return 0;
