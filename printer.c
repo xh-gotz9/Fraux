@@ -142,6 +142,12 @@ char *print_bencode_node(bencode_node *node, print_buffer *out)
         buffer = out;
     }
 
+    if (node == NULL)
+    {
+        write_print_buffer(buffer, "", 0);
+        return 0;
+    }
+
     switch (node->type)
     {
     case T_STR:
