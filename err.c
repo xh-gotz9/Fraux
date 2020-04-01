@@ -4,6 +4,13 @@
 
 int err;
 
+char *errinfo[] = {
+    [FR_SUCCESS] = "SUCCESS",
+    [FR_SYSTEM_ERROR] = "SYSTEM_ERROR",
+    [FR_SYNTAX_ERROR] = "SYNTAX_ERROR",
+    [FR_DATA_ERROR] = "DATA_ERROR",
+    [FR_UNSUPPORT_TYPE] = "UNSUPPORT_TYPE"};
+
 /**
  * not thread safety
  **/
