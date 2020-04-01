@@ -3,19 +3,20 @@
 
 extern int err;
 
-#define SUCCESS 0
-#define SYSERR 1
-#define SNTXERR 2
-#define DATAERR 3
+#define FR_SUCCESS 0
+#define FR_SYSTEM_ERROR 1
+#define FR_SYNTAX_ERROR 2
+#define FR_DATA_ERROR 3
+#define FR_UNSUPPORT_TYPE 4
 
-#define MAX_ERR_ID 2
+#define MAX_ERR_ID 3
 
 char *errinfo[] = {
-    [SUCCESS] = "SUCCESS",
-    [SYSERR] = "SYSERR",
-    [SNTXERR] = "SNTXERR",
-    [DATAERR] = "DATAERR",
-};
+    [FR_SUCCESS] = "SUCCESS",
+    [FR_SYSTEM_ERROR] = "SYSTEM_ERROR",
+    [FR_SYNTAX_ERROR] = "SYNTAX_ERROR",
+    [FR_DATA_ERROR] = "DATA_ERROR",
+    [FR_UNSUPPORT_TYPE] = "UNSUPPORT_TYPE"};
 
 void seterrinfo(int errid);
 

@@ -19,9 +19,9 @@ char *geterrinfo(int errid)
 
 void perrinfo(char *msg)
 {
-    if (err == SYSERR)
+    if (err == FR_SYSTEM_ERROR)
     {
-        perror(errinfo[SYSERR]);
+        perror(errinfo[FR_SYSTEM_ERROR]);
     }
     else
     {
