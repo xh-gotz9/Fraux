@@ -22,7 +22,7 @@ parser.o: parser.h parser.c bencode.o
 
 test.o: test.c
 
-test: bencode.h bencode.c parser.h parser.c test.c printer.h printer.c
+test: bencode.h bencode.c parser.h parser.c test.c printer.h printer.c err.h err.c
 	$(BUILD_CMD) -D_CHECK_DATA
 
 check:
