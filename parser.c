@@ -4,6 +4,8 @@
 
 #include "bencode.h"
 #include "parser.h"
+#include "dbg.h"
+#include "err.h"
 
 char buf[BUFSIZ + 1];
 
@@ -228,8 +230,8 @@ static bencode_node *parse_node_num(parser_buffer *buffer)
     }
     strncpy(buf, head, (tail - head + 1));
 
-    int num;
-    sscanf(buf, "i%de", &num);
+    int64_t num;
+    sscanf(buf, "i%lde", &num);
 
     tmp = create_node(T_NUM);
     tmp->number = num;

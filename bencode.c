@@ -1,6 +1,8 @@
 #include <string.h>
 
 #include "bencode.h"
+#include "dbg.h"
+#include "err.h"
 
 bencode_node *create_node(int type)
 {
@@ -95,7 +97,7 @@ int bencode_dict_find(const bencode_node *dict, const char *key, bencode_node **
         LOG_DBG("NULL key");
         return -1;
     }
-    
+
     if (dict->type != T_DICT)
     {
         // TODO set error info

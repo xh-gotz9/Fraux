@@ -4,6 +4,8 @@
 #include <error.h>
 
 #include "printer.h"
+#include "dbg.h"
+#include "err.h"
 
 char buf[BUFSIZ + 1];
 
@@ -162,7 +164,7 @@ char *print_bencode_node(bencode_node *node, print_buffer *out)
         write_print_buffer(buffer, buf, strlen(buf));
         break;
     case T_NUM:
-        sprintf(buf, "%d", node->number);
+        sprintf(buf, "%ld", node->number);
         write_print_buffer(buffer, buf, strlen(buf));
         break;
     case T_LIST:
