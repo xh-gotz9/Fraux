@@ -4,7 +4,7 @@
 
 int err;
 
-char *errinfo[] = {
+char *errinfos[] = {
     [FR_SUCCESS] = "SUCCESS",
     [FR_SYSTEM_ERROR] = "SYSTEM_ERROR",
     [FR_SYNTAX_ERROR] = "SYNTAX_ERROR",
@@ -21,17 +21,17 @@ void seterrinfo(int errid)
 
 char *geterrinfo(int errid)
 {
-    return errid >= MAX_ERR_ID ? NULL : errinfo[errid];
+    return errid >= MAX_ERR_ID ? NULL : errinfos[errid];
 }
 
 void perrinfo(char *msg)
 {
     if (err == FR_SYSTEM_ERROR)
     {
-        perror(errinfo[FR_SYSTEM_ERROR]);
+        perror(errinfos[FR_SYSTEM_ERROR]);
     }
     else
     {
-        fprintf(stderr, "%s:%s\n", msg, errinfo[err]);
+        fprintf(stderr, "%s:%s\n", msg, errinfos[err]);
     }
 }

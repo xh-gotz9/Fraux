@@ -11,7 +11,7 @@ extern int err;
 
 #define MAX_ERR_ID 3
 
-extern char *errinfo[];
+extern char *errinfos[];
 
 void seterrinfo(int errid);
 
