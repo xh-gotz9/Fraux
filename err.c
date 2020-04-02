@@ -24,7 +24,7 @@ char *geterrinfo(int errid)
     return errid >= MAX_ERR_ID ? NULL : errinfos[errid];
 }
 
-void perrinfo(char *msg)
+void _perrinfo(char *msg)
 {
     if (err == FR_SYSTEM_ERROR)
     {

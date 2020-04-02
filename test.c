@@ -16,6 +16,7 @@
 #include "bencode.h"
 #include "parser.h"
 #include "printer.h"
+#include "err.h"
 
 #define ASSERT_RESULT(CONDITION, RES)             \
     if (CONDITION == RES)                         \
@@ -27,7 +28,7 @@
         printf("%s test failed!\n", #CONDITION);  \
         exit(EXIT_FAILURE);                       \
     }
-    
+
 #define ASSERT_RESULT_NOT(CONDITION, RES)         \
     if (CONDITION != RES)                         \
     {                                             \
@@ -124,7 +125,6 @@ int dict_find_test()
 
             target->next = node;
             node->prev = target;
-
         }
 
         i++;
@@ -270,6 +270,20 @@ int parse_data_from_file()
     return -1;
 }
 
+// err.h
+int parse_err_test()
+{
+    seterrinfo(FR_SYNTAX_ERROR);
+    ASSERT_RESULT(err, FR_SYNTAX_ERROR);
+
+    seterrinfo(FR_DATA_ERROR);
+    ASSERT_RESULT(err, FR_DATA_ERROR);
+
+    perrinfo("parse_err_test");
+    
+    return 0;
+}
+
 #define PARSE_DATA_TEST(DATA, CHECK) parse_data_test(DATA, CHECK)
 
 int main(int argc, char *argv[])
@@ -287,6 +301,8 @@ int main(int argc, char *argv[])
     ASSERT_RESULT(PARSE_DATA_TEST("d3:key3:vale", "{\"key\":\"val\"}"), 0);
 
     ASSERT_RESULT(parse_data_from_file(), 0);
+
+    ASSERT_RESULT(parse_err_test(), 0);
 
     return 0;
 }

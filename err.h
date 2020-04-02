@@ -17,6 +17,8 @@ void seterrinfo(int errid);
 
 char *geterrinfo(int errid);
 
-void perrinfo(char *msg);
+void _perrinfo(char *msg);
+
+#define perrinfo _perrinfo
 
 #endif
