@@ -84,25 +84,28 @@ bencode_node *parse_node(parser_buffer *buffer)
                 break;
             case 'e':
                 // end of parent "LIST" or "DICT"
-                if (depth == 1)
+                buffer->offset++;
+                depth--;
+                if (depth >= 1)
                 {
-                    return root->data;
+                    parent = parent->prev;
+                    // TODO free memory
+                    parent->next->prev = NULL; // free(parent->next);
+                    parent->next = NULL;
                 }
                 else
                 {
-                    parent = parent->prev;
-
-                    // TODO free memory
-                    parent->next->prev = NULL;
-
-                    parent->next = NULL;
+                    if (buffer->offset != buffer->len)
+                    {
+                        // 解析数据提前结束
+                        seterrinfo(FR_DATA_ERROR);
+                        return NULL;
+                    }
                 }
-                buffer->offset++;
-                depth--;
                 continue;
             default:
                 LOG_DBG("syntax error");
-                // TODO set error info: syntax error
+                seterrinfo(FR_SYNTAX_ERROR);
                 return NULL;
             }
         }
@@ -151,7 +154,7 @@ bencode_node *parse_node(parser_buffer *buffer)
                     if (tmp->type != T_STR)
                     {
                         LOG_DBG("Syntax Error: wrong type of dict_node's key");
-                        // TODO set error info: syntax error
+                        seterrinfo(FR_SYNTAX_ERROR);
                         return NULL;
                     }
 
@@ -162,7 +165,7 @@ bencode_node *parse_node(parser_buffer *buffer)
             case T_NUM:
             default:
                 LOG_DBG("syntax error");
-                // TODO: set error info: syntax error
+                seterrinfo(FR_SYNTAX_ERROR);
                 return NULL;
             }
 

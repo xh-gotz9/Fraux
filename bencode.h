@@ -6,6 +6,7 @@
 #include <sys/types.h>
 
 #include "dbg.h"
+#include "err.h"
 
 /* data type */
 #define T_STR 0

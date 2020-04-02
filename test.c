@@ -126,10 +126,6 @@ int dict_find_test()
 
             target->next = node;
             node->prev = target;
-<<<<<<< HEAD
-            
-=======
->>>>>>> error-info-util
         }
 
         i++;
@@ -174,7 +170,7 @@ int write_print_buffer_realloc_test()
 
 int print_node_test()
 {
-    char *data = "d4:datal3:cow3:moo4:spam4:eggsee3:keyi2e";
+    char *data = "d4:datal3:cow3:moo4:spam4:eggse3:keyi2ee";
     // {"data":["cow", "moo", "spam","eggs"]}
     bencode_node *root = create_node(T_DICT),
                  *dict_node = create_node(T_DICT_NODE),
@@ -189,7 +185,7 @@ int print_node_test()
 
     tmp = create_node(T_LIST);
     char *strs[] = {"cow", "moo", "spam", "eggs"};
-    for (size_t i = 0; i < 3; i++)
+    for (size_t i = 0; i < 4; i++)
     {
         bencode_node *n = create_node(T_STR);
         n->str = strs[i];
@@ -223,7 +219,7 @@ int print_node_test()
 
     bencode_node *node = parse_node(buffer);
 
-    return strcmp(print_bencode_node(node, 0),
+    return strcmp(print_bencode_node(root, 0),
                   "{\"data\":[\"cow\",\"moo\",\"spam\",\"eggs\"],\"key\":2}") == 0
                ? 0
                : -1;
@@ -282,7 +278,7 @@ int parse_err_test()
     ASSERT_RESULT(err, FR_DATA_ERROR);
 
     perrinfo("parse_err_test");
-    
+
     return 0;
 }
 
