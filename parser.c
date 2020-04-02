@@ -2,8 +2,8 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "parser.h"
 #include "bencode.h"
+#include "parser.h"
 
 char buf[BUFSIZ + 1];
 
@@ -84,25 +84,28 @@ bencode_node *parse_node(parser_buffer *buffer)
                 break;
             case 'e':
                 // end of parent "LIST" or "DICT"
-                if (depth == 1)
+                buffer->offset++;
+                depth--;
+                if (depth >= 1)
                 {
-                    return root->data;
+                    parent = parent->prev;
+                    // TODO free memory
+                    parent->next->prev = NULL; // free(parent->next);
+                    parent->next = NULL;
                 }
                 else
                 {
-                    parent = parent->prev;
-
-                    // TODO free memory
-                    parent->next->prev = NULL;
-
-                    parent->next = NULL;
+                    if (buffer->offset != buffer->len)
+                    {
+                        // 解析数据提前结束
+                        seterrinfo(FR_DATA_ERROR);
+                        return NULL;
+                    }
                 }
-                buffer->offset++;
-                depth--;
                 continue;
             default:
                 LOG_DBG("syntax error");
-                // TODO set error info: syntax error
+                seterrinfo(FR_SYNTAX_ERROR);
                 return NULL;
             }
         }
@@ -119,7 +122,10 @@ bencode_node *parse_node(parser_buffer *buffer)
             switch (parent->data->type)
             {
             case T_LIST:
-                bencode_list_add(parent->data, tmp);
+                if (bencode_list_add(parent->data, tmp) == -1)
+                {
+                    return NULL;
+                }
                 break;
             case T_DICT:
                 if (dict_tmp != NULL)
@@ -145,6 +151,13 @@ bencode_node *parse_node(parser_buffer *buffer)
                 else
                 {
                     dict_tmp = create_node(T_DICT_NODE);
+                    if (tmp->type != T_STR)
+                    {
+                        LOG_DBG("Syntax Error: wrong type of dict_node's key");
+                        seterrinfo(FR_SYNTAX_ERROR);
+                        return NULL;
+                    }
+
                     dict_tmp->key = tmp;
                 }
                 break;
@@ -152,7 +165,7 @@ bencode_node *parse_node(parser_buffer *buffer)
             case T_NUM:
             default:
                 LOG_DBG("syntax error");
-                // TODO: set error info: syntax error
+                seterrinfo(FR_SYNTAX_ERROR);
                 return NULL;
             }
 
