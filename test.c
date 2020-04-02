@@ -39,6 +39,7 @@
         printf("%s test failed!\n", #CONDITION);  \
         exit(EXIT_FAILURE);                       \
     }
+
 // bencode.h tests
 int create_node_test()
 {
@@ -222,7 +223,7 @@ int print_node_test()
     bencode_node *node = parse_node(buffer);
 
     return strcmp(print_bencode_node(node, 0),
-                  "{\"data\":[\"cow\",\"moo\",\"spam\",\"eggs\"]}") == 0
+                  "{\"data\":[\"cow\",\"moo\",\"spam\",\"eggs\"],\"key\":2}") == 0
                ? 0
                : -1;
 }
