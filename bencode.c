@@ -1,14 +1,20 @@
 #include <string.h>
 
 #include "bencode.h"
+#include "dbg.h"
+#include "err.h"
 
 bencode_node *create_node(int type)
 {
+    seterrinfo(FR_SUCCESS);
+
     bencode_node *node = NULL;
 
     node = malloc(sizeof(bencode_node));
     if (node == NULL)
     {
+        LOG_DBG("malloc failed");
+        seterrinfo(FR_SYSTEM_ERROR);
         return NULL;
     }
     memset(node, 0, sizeof(bencode_node));
@@ -23,6 +29,8 @@ bencode_node *create_node(int type)
  **/
 int bencode_cmp(const bencode_node *a, const bencode_node *b)
 {
+
+    seterrinfo(FR_SUCCESS);
     // 地址相同
     if (a == b)
     {
@@ -43,15 +51,14 @@ int bencode_cmp(const bencode_node *a, const bencode_node *b)
     case T_NUM:
         return a->number - b->number;
 
-    // TODO 讨论如何进行比较
-    case T_DICT_NODE:
     // 仅支持地址比较
+    case T_DICT_NODE:
     case T_LIST:
     case T_DICT:
         return a - b;
     default:
         LOG_DBG("unsupport type");
-        // TODO error unsupport type
+        seterrinfo(FR_DATA_ERROR);
         break;
     }
 
@@ -60,9 +67,12 @@ int bencode_cmp(const bencode_node *a, const bencode_node *b)
 
 int bencode_list_add(bencode_node *list, bencode_node *node)
 {
+    seterrinfo(FR_SUCCESS);
+
     if (list == NULL || !(list->type != T_LIST || list->type != T_DICT) || node == NULL)
     {
         LOG_DBG("var error");
+        seterrinfo(FR_DATA_ERROR);
         return -1;
     }
 
@@ -90,15 +100,18 @@ int bencode_dict_add()
 
 int bencode_dict_find(const bencode_node *dict, const char *key, bencode_node **value)
 {
+    seterrinfo(FR_SUCCESS);
+
     if (key == NULL)
     {
         LOG_DBG("NULL key");
+        seterrinfo(FR_DATA_ERROR);
         return -1;
     }
-    
+
     if (dict->type != T_DICT)
     {
-        // TODO set error info
+        seterrinfo(FR_DATA_ERROR);
         return -1;
     }
 

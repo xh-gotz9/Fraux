@@ -4,6 +4,8 @@
 
 #include "bencode.h"
 #include "parser.h"
+#include "dbg.h"
+#include "err.h"
 
 char buf[BUFSIZ + 1];
 
@@ -13,8 +15,12 @@ static bencode_node *parse_node_num(parser_buffer *buffer);
 
 parser_buffer *create_parser_buffer(const char *src)
 {
+    seterrinfo(FR_SUCCESS);
+
     if (src == NULL)
     {
+        LOG_DBG("NULL parameter to create_paser_buffer");
+        seterrinfo(FR_DATA_ERROR);
         return NULL;
     }
 
@@ -35,10 +41,13 @@ typedef struct bencode_node_list_node
 
 bencode_node_list_node *create_list_node()
 {
+    seterrinfo(FR_SUCCESS);
+
     bencode_node_list_node *node = malloc(sizeof(bencode_node_list_node));
     if (node == NULL)
     {
-        LOG_DBG("malloc error");
+        LOG_DBG("malloc failed");
+        seterrinfo(FR_SYSTEM_ERROR);
         return NULL;
     }
     memset(node, 0, sizeof(bencode_node_list_node));
@@ -48,6 +57,8 @@ bencode_node_list_node *create_list_node()
 
 bencode_node *parse_node(parser_buffer *buffer)
 {
+    seterrinfo(FR_SUCCESS);
+
     int depth = 0;
     bencode_node *dict_tmp = NULL; /* dic_tmp 记录解析时未存入 DICT 的 DICT_NODE 节点*/
 
@@ -98,6 +109,7 @@ bencode_node *parse_node(parser_buffer *buffer)
                     if (buffer->offset != buffer->len)
                     {
                         // 解析数据提前结束
+                        LOG_DBG("parsing end before EOF");
                         seterrinfo(FR_DATA_ERROR);
                         return NULL;
                     }
@@ -113,6 +125,10 @@ bencode_node *parse_node(parser_buffer *buffer)
         if (parent == NULL)
         {
             root = parent = create_list_node();
+            if (root == NULL)
+            {
+            }
+
             parent->data = tmp;
             depth = 1;
         }
@@ -124,6 +140,8 @@ bencode_node *parse_node(parser_buffer *buffer)
             case T_LIST:
                 if (bencode_list_add(parent->data, tmp) == -1)
                 {
+                    LOG_DBG("bencode_list_add failed in parse_node");
+                    // bencode_list_add set a errinfo
                     return NULL;
                 }
                 break;
@@ -228,8 +246,8 @@ static bencode_node *parse_node_num(parser_buffer *buffer)
     }
     strncpy(buf, head, (tail - head + 1));
 
-    int num;
-    sscanf(buf, "i%de", &num);
+    int64_t num;
+    sscanf(buf, "i%lde", &num);
 
     tmp = create_node(T_NUM);
     tmp->number = num;

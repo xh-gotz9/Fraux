@@ -5,9 +5,6 @@
 #include <stdio.h>
 #include <sys/types.h>
 
-#include "dbg.h"
-#include "err.h"
-
 /* data type */
 #define T_STR 0
 #define T_NUM 1
@@ -23,7 +20,7 @@ typedef struct bencode_node
     char *str;
 
     /* T_NUM node*/
-    int number;
+    int64_t number;
 
     /* T_LIST node */
     struct bencode_node *list_node_head;
@@ -31,6 +28,7 @@ typedef struct bencode_node
     /* T_DICT node */
     struct bencode_node *dict_node_head;
 
+    /* T_DICT_NODE node */
     struct bencode_node *key;
     struct bencode_node *val;
 
