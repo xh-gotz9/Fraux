@@ -14,21 +14,26 @@ static int realloc_print_buffer(print_buffer *buffer, size_t target);
 /**
  * 检查 buffer, buffer->magic 以及 buffer->buf.
  **/
-static void ensure(print_buffer *buffer)
+static int ensure(print_buffer *buffer)
 {
     if (buffer != NULL && buffer->magic == PRINT_BUFFER_MAGICNUM && buffer->buf != NULL)
     {
-        return;
+        return 0;
     }
     LOG_DBG("WARNING - try to destroy a memory which is not \"struct print_buffer\" data.\n");
+    seterrinfo(FR_DATA_ERROR);
+    return -1;
 }
 
 print_buffer *create_print_buffer()
 {
+    seterrinfo(FR_SUCCESS);
+
     print_buffer *buffer = malloc(sizeof(print_buffer));
     if (buffer == NULL)
     {
         LOG_DBG(strerror(errno));
+        seterrinfo(FR_SYSTEM_ERROR);
         return NULL;
     }
 
@@ -38,6 +43,7 @@ print_buffer *create_print_buffer()
     if (ptr == NULL)
     {
         LOG_DBG(strerror(errno));
+        seterrinfo(FR_SYSTEM_ERROR);
         return NULL;
     }
 
@@ -53,7 +59,10 @@ print_buffer *create_print_buffer()
 
 int destroy_print_buffer_info(print_buffer *buffer, char **str)
 {
-    ensure(buffer);
+    seterrinfo(FR_SUCCESS);
+
+    if (ensure(buffer) == -1)
+        return -1;
 
     *str = buffer->buf;
 
@@ -62,7 +71,10 @@ int destroy_print_buffer_info(print_buffer *buffer, char **str)
 
 int destroy_print_buffer_all(print_buffer *buffer)
 {
-    ensure(buffer);
+    seterrinfo(FR_SUCCESS);
+
+    if (ensure(buffer) == -1)
+        return -1;
 
     char *ptr = buffer->buf;
     if (destroy_print_buffer_info(buffer, 0) == -1)
@@ -76,7 +88,10 @@ int destroy_print_buffer_all(print_buffer *buffer)
 
 print_buffer *write_print_buffer(print_buffer *buffer, void *data, size_t len)
 {
-    ensure(buffer);
+    seterrinfo(FR_SUCCESS);
+
+    if (ensure(buffer) == -1)
+        return NULL;
 
     char *buf = buffer->buf;
     size_t offset = buffer->length;
@@ -97,7 +112,10 @@ print_buffer *write_print_buffer(print_buffer *buffer, void *data, size_t len)
 
 static int realloc_print_buffer(print_buffer *buffer, size_t target)
 {
-    ensure(buffer);
+    seterrinfo(FR_SUCCESS);
+
+    if (ensure(buffer) == -1)
+        return -1;
 
     int new_size = buffer->size;
 
@@ -122,7 +140,11 @@ static int realloc_print_buffer(print_buffer *buffer, size_t target)
 
 const char *out_print_buffer(print_buffer *buffer)
 {
-    ensure(buffer);
+    seterrinfo(FR_SUCCESS);
+
+    if (ensure(buffer) == -1)
+        return NULL;
+
     printf("%s\n", buffer->buf);
     return buffer->buf;
 }
@@ -133,6 +155,8 @@ static int print_bencode_dict_node(bencode_node *dict, print_buffer *buffer);
 
 char *print_bencode_node(bencode_node *node, print_buffer *out)
 {
+    seterrinfo(FR_SUCCESS);
+
     print_buffer *buffer;
     if (out == NULL)
     {
@@ -176,8 +200,14 @@ char *print_bencode_node(bencode_node *node, print_buffer *out)
     default:
         // error: 非法数据
         LOG_DBG("error data with unknown type");
+        seterrinfo(FR_DATA_ERROR);
+    }
+
+    if (err != FR_SUCCESS)
+    {
         return NULL;
     }
+
     if (out == NULL)
     {
         char *data;
