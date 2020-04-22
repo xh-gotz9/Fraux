@@ -23,7 +23,10 @@ clean:
 test.o: test.h test.c
 	$(COMPILE_CMD)
 
-test: test.o
+fraux.o: fraux.h fraux.c
+	$(COMPILE_CMD)
+
+test: test.o fraux.o
 	$(BUILD_CMD)
 
 check: buildDir test
