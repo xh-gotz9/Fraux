@@ -43,9 +43,24 @@ static void test_parse_number()
     ASSERT(FRAUX_PARSE_INVALID_VALUE, fraux_parse(&v, "i3d"));
 }
 
+static void parse_result_test(const char *s, int result)
+{
+    fraux_value v;
+    int res = fraux_parse(&v, s);
+    ASSERT(res, result);
+}
+
+static void test_parse_string()
+{
+    parse_result_test("2:OK", FRAUX_PARSE_OK);
+    parse_result_test("2OK", FRAUX_PARSE_INVALID_VALUE);
+    parse_result_test("2", FRAUX_PARSE_MISS_QUOTATION_MARK);
+}
+
 static void test_parse()
 {
     test_parse_number();
+    test_parse_string();
 }
 
 int main(int argc, char const *argv[])

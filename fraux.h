@@ -1,6 +1,8 @@
 #ifndef __FRAUX_BENCODE_H__
 #define __FRAUX_BENCODE_H__
 
+#include <stdlib.h>
+
 typedef enum
 {
     FRAUX_UNKNOWN = 0,
@@ -15,6 +17,12 @@ typedef struct
     fraux_type type;
     union {
         long int n;
+        struct bstring
+        {
+            char *s;
+            size_t len;
+        } s;
+
     } u;
 } fraux_value;
 
@@ -28,5 +36,9 @@ enum
 int fraux_parse(fraux_value *v, const char *bencode);
 
 fraux_type fraux_get_type(fraux_value *v);
+
+void fraux_set_number(fraux_value *v, long int num);
+
+void fraux_set_string(fraux_value *v, const char *s, size_t len);
 
 #endif
