@@ -5,11 +5,50 @@
 #include <stdint.h>
 #include <string.h>
 
+#ifndef FRAUX_CONTEXT_STACK_INIT_SIZE
+#define FRAUX_CONTEXT_STACK_INIT_SIZE 256
+#endif
+
 typedef struct
 {
     const char *bencode;
     size_t len, pos;
+    struct stack
+    {
+        char *s;
+        size_t size, top;
+    } stack;
 } fraux_conext;
+
+static void *fraux_conext_push(fraux_conext *c, size_t len)
+{
+    struct stack *s = &c->stack;
+    assert(len > 0);
+    if (s->top + len >= s->size)
+    {
+        // TODO realloc
+        if (s->size == 0)
+        {
+            s->size = FRAUX_CONTEXT_STACK_INIT_SIZE;
+        }
+        while (s->top + len >= s->size)
+        {
+            s->size += s->size >> 1;
+        }
+        s->s = realloc(s->s, s->size);
+    }
+    void *ret = s->s + s->top;
+    s->top += len;
+    return ret;
+
+    return NULL;
+}
+
+static void *fraux_conext_pop(fraux_conext *c, size_t len)
+{
+    assert(c->stack.top >= len);
+    return c->stack.s + (c->stack.top -= len);
+}
 
 static int fraux_parse_number(fraux_conext *c, fraux_value *v)
 {
