@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
+#include <string.h>
 
 #include "fraux.h"
 
@@ -50,12 +51,22 @@ static void parse_result_test(const char *s, size_t len, int result)
     ASSERT(res, result);
 }
 
+static void parse_binary_string_test()
+{
+    fraux_value v;
+    fraux_parse(&v, "3:\000ab", 5);
+    ASSERT(fraux_get_type(&v), FRAUX_STRING);
+    ASSERT(v.u.s.len, 3);
+    ASSERT(memcmp(v.u.s.s, "\000ab", v.u.s.len), 0);
+}
+
 static void test_parse_string()
 {
     parse_result_test("2:OK", 4, FRAUX_PARSE_OK);
     parse_result_test("2OK", 3, FRAUX_PARSE_INVALID_VALUE);
     parse_result_test("2", 1, FRAUX_PARSE_MISS_QUOTATION_MARK);
     parse_result_test("3:O\000K", 5, FRAUX_PARSE_OK);
+    parse_binary_string_test();
 }
 
 static void test_parse()
