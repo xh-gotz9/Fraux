@@ -33,7 +33,7 @@ enum
     FRAUX_PARSE_MISS_QUOTATION_MARK,
 };
 
-int fraux_parse(fraux_value *v, const char *bencode);
+int fraux_parse(fraux_value *v, const char *bencode, size_t len);
 
 fraux_type fraux_get_type(fraux_value *v);
 

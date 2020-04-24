@@ -37,24 +37,25 @@
 static void test_parse_number()
 {
     fraux_value v;
-    fraux_parse(&v, "i3e");
+    fraux_parse(&v, "i3e", 3);
     ASSERT(fraux_get_type(&v), FRAUX_NUMBER);
-    ASSERT(FRAUX_PARSE_MISS_QUOTATION_MARK, fraux_parse(&v, "i3"));
-    ASSERT(FRAUX_PARSE_INVALID_VALUE, fraux_parse(&v, "i3d"));
+    ASSERT(FRAUX_PARSE_MISS_QUOTATION_MARK, fraux_parse(&v, "i3", 2));
+    ASSERT(FRAUX_PARSE_INVALID_VALUE, fraux_parse(&v, "i3d", 3));
 }
 
-static void parse_result_test(const char *s, int result)
+static void parse_result_test(const char *s, size_t len, int result)
 {
     fraux_value v;
-    int res = fraux_parse(&v, s);
+    int res = fraux_parse(&v, s, len);
     ASSERT(res, result);
 }
 
 static void test_parse_string()
 {
-    parse_result_test("2:OK", FRAUX_PARSE_OK);
-    parse_result_test("2OK", FRAUX_PARSE_INVALID_VALUE);
-    parse_result_test("2", FRAUX_PARSE_MISS_QUOTATION_MARK);
+    parse_result_test("2:OK", 4, FRAUX_PARSE_OK);
+    parse_result_test("2OK", 3, FRAUX_PARSE_INVALID_VALUE);
+    parse_result_test("2", 1, FRAUX_PARSE_MISS_QUOTATION_MARK);
+    parse_result_test("3:O\000K", 5, FRAUX_PARSE_OK);
 }
 
 static void test_parse()

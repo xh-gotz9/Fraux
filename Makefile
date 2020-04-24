@@ -5,7 +5,7 @@ CC = gcc
 
 DEBUG = -g -DDEBUG
 
-COMPILE_CMD = $(CC) $(DEBUG_HEADER) $? -c 
+COMPILE_CMD = $(CC) $? -c 
 BUILD_CMD = $(CC) $? -o $(BUILD_DIR)/$@	
 
 all: buildDir executable

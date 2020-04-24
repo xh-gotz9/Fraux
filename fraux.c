@@ -8,63 +8,80 @@
 typedef struct
 {
     const char *bencode;
+    size_t len, pos;
 } fraux_conext;
 
 static int fraux_parse_number(fraux_conext *c, fraux_value *v)
 {
-    assert(*c->bencode == 'i');
-    const char *p = c->bencode + 1;
+    assert(c->bencode[c->pos] == 'i');
+    const char *s = c->bencode + c->pos;
+    size_t p = 1;
 
-    while (*p >= '0' && *p <= '9')
-        p++;
-
-    switch (*p++)
+    while (s[p] >= '0' && s[p] <= '9')
     {
-    case 'e':
-        v->u.n = strtol(c->bencode + 1, NULL, 10);
-        v->type = FRAUX_NUMBER;
-        c->bencode = p;
-    case '\0':
-        return FRAUX_PARSE_MISS_QUOTATION_MARK;
-    default:
+        p++;
+        if (c->pos + p >= c->len)
+        {
+            return FRAUX_PARSE_MISS_QUOTATION_MARK; /* over range */
+        }
+    }
+
+    if (s[p++] != 'e')
+    {
         return FRAUX_PARSE_INVALID_VALUE;
     }
+
+    v->u.n = strtol(c->bencode + c->pos + 1, NULL, 10);
+    v->type = FRAUX_NUMBER;
+    c->pos += p;
+
+    return FRAUX_PARSE_OK;
 }
 
 static int fraux_parse_string(fraux_conext *c, fraux_value *v)
 {
-    assert(*c->bencode >= '0' && *c->bencode <= '9');
-    const char *p = c->bencode;
-    long int len;
+    assert(c->bencode[c->pos] >= '0' && c->bencode[c->pos] <= '9');
+    const char *head = c->bencode + c->pos;
+    size_t p = 0;
 
-    while (*p >= '0' && *p <= '9')
+    while (head[p] >= '0' && head[p] <= '9')
     {
-        *p++;
+        p++;
+        if (c->pos + p >= c->len)
+        {
+            return FRAUX_PARSE_MISS_QUOTATION_MARK; /* over range */
+        }
     }
 
-    switch (*p++)
+    if (head[p++] != ':')
     {
-    case ':':
-        len = strtol(c->bencode, NULL, 10);
-        fraux_set_string(v, p, len);
-        v->type = FRAUX_STRING;
-        c->bencode += len;
-        return FRAUX_PARSE_OK;
-    case '\0':
-        return FRAUX_PARSE_MISS_QUOTATION_MARK;
-    default:
         return FRAUX_PARSE_INVALID_VALUE;
     }
+
+    /* read string length */
+    long int len = strtol(c->bencode, NULL, 10);
+
+    /* check data range */
+    if (p + len > c->len)
+    {
+        return FRAUX_PARSE_INVALID_VALUE;
+    }
+
+    fraux_set_string(v, head + p, len);
+    v->type = FRAUX_STRING;
+    c->pos += len;
+
+    return FRAUX_PARSE_OK;
 }
 
 static int fraux_parse_value(fraux_conext *c, fraux_value *v)
 {
-    switch (*c->bencode)
+    switch (c->bencode[c->pos])
     {
     case 'i':
         return fraux_parse_number(c, v);
     default:
-        if (*c->bencode >= '0' || *c->bencode <= '9')
+        if (c->bencode[c->pos] >= '0' || c->bencode[c->pos] <= '9')
         {
             return fraux_parse_string(c, v);
         }
@@ -72,11 +89,13 @@ static int fraux_parse_value(fraux_conext *c, fraux_value *v)
     }
 }
 
-int fraux_parse(fraux_value *v, const char *bencode)
+int fraux_parse(fraux_value *v, const char *bencode, size_t len)
 {
     fraux_conext context;
     assert(v != NULL);
     context.bencode = bencode;
+    context.len = len;
+    context.pos = 0;
     v->type = FRAUX_UNKNOWN;
     return fraux_parse_value(&context, v);
 }
