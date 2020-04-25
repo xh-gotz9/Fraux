@@ -20,6 +20,8 @@ typedef struct
     } stack;
 } fraux_conext;
 
+static int fraux_parse_value(fraux_conext *c, fraux_value *v);
+
 static void *fraux_conext_push(fraux_conext *c, size_t len)
 {
     struct stack *s = &c->stack;
@@ -98,7 +100,7 @@ static int fraux_parse_string(fraux_conext *c, fraux_value *v)
     }
 
     /* read string length */
-    long int len = strtol(c->bencode, NULL, 10);
+    long int len = strtol(head, NULL, 10);
 
     /* check data range */
     if (p + len > c->len)
@@ -108,9 +110,54 @@ static int fraux_parse_string(fraux_conext *c, fraux_value *v)
 
     fraux_set_string(v, head + p, len);
     v->type = FRAUX_STRING;
-    c->pos += len;
+    c->pos += p + len;
 
     return FRAUX_PARSE_OK;
+}
+
+static int fraux_parse_list(fraux_conext *c, fraux_value *v)
+{
+    assert(v != NULL);
+    assert(c->bencode[c->pos++] == 'l');
+
+    int ret;
+    size_t size = 0;
+    fraux_value *head = (fraux_value *)(c->stack.s + c->stack.top);
+    for (;;)
+    {
+        fraux_value e;
+        switch (c->bencode[c->pos])
+        {
+        case 'e':
+            c->pos++;
+            fraux_set_list(v, size);
+            if (size > 0)
+                memcpy(v->u.l.e, fraux_conext_pop(c, size * sizeof(fraux_value)), size * sizeof(fraux_value));
+            v->u.l.size = size;
+            ret = FRAUX_PARSE_OK;
+            goto break_loop;
+        default:
+            if (c->pos >= c->len)
+            {
+                ret = FRAUX_PARSE_MISS_QUOTATION_MARK;
+            }
+
+            fraux_clean(&e);
+            if ((ret = fraux_parse_value(c, &e)) != FRAUX_PARSE_OK)
+            {
+                fraux_conext_pop(c, size * sizeof(fraux_value));
+                goto break_loop;
+            }
+            memcpy(fraux_conext_push(c, sizeof(fraux_value)), &e, sizeof(fraux_value));
+            size++;
+            break;
+        }
+    }
+break_loop:
+    for (size_t i = 0; i < size; i++)
+        fraux_clean(((fraux_value *)(c->stack.s + c->stack.top)) + i);
+
+    return ret;
 }
 
 static int fraux_parse_value(fraux_conext *c, fraux_value *v)
@@ -119,6 +166,8 @@ static int fraux_parse_value(fraux_conext *c, fraux_value *v)
     {
     case 'i':
         return fraux_parse_number(c, v);
+    case 'l':
+        return fraux_parse_list(c, v);
     default:
         if (c->bencode[c->pos] >= '0' || c->bencode[c->pos] <= '9')
         {
@@ -132,6 +181,7 @@ int fraux_parse(fraux_value *v, const char *bencode, size_t len)
 {
     fraux_conext context;
     assert(v != NULL);
+    memset(&context, 0, sizeof(fraux_conext));
     context.bencode = bencode;
     context.len = len;
     context.pos = 0;
@@ -142,9 +192,18 @@ int fraux_parse(fraux_value *v, const char *bencode, size_t len)
 void fraux_clean(fraux_value *v)
 {
     assert(v != NULL);
-    if (fraux_get_type(v) == FRAUX_STRING)
+    switch (fraux_get_type(v))
     {
+    case FRAUX_STRING:
         free(v->u.s.s);
+        break;
+    case FRAUX_LIST:
+        for (size_t i = 0; i < v->u.l.size; i++)
+        {
+            fraux_clean(v->u.l.e + i);
+        }
+        free(v->u.l.e);
+        break;
     }
     memset(v, 0, sizeof(fraux_value));
     v->type = FRAUX_UNKNOWN;
@@ -173,4 +232,14 @@ void fraux_set_string(fraux_value *v, const char *s, size_t len)
     v->u.s.s[len] = '\0';
     v->u.s.len = len;
     v->type = FRAUX_STRING;
+}
+
+void fraux_set_list(fraux_value *v, size_t capacity)
+{
+    assert(v != NULL);
+    fraux_clean(v);
+    v->type = FRAUX_LIST;
+    v->u.l.size = 0;
+    v->u.l.capacity = capacity;
+    v->u.l.e = capacity > 0 ? malloc(capacity * (sizeof(fraux_value))) : NULL;
 }

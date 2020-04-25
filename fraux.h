@@ -12,7 +12,9 @@ typedef enum
     FRAUX_DICTIONARY
 } fraux_type;
 
-typedef struct
+typedef struct fraux_value fraux_value;
+
+typedef struct fraux_value
 {
     fraux_type type;
     union {
@@ -22,7 +24,11 @@ typedef struct
             char *s;
             size_t len;
         } s;
-
+        struct blist
+        {
+            fraux_value *e;
+            size_t size, capacity;
+        } l;
     } u;
 } fraux_value;
 
@@ -37,8 +43,12 @@ int fraux_parse(fraux_value *v, const char *bencode, size_t len);
 
 fraux_type fraux_get_type(fraux_value *v);
 
+void fraux_clean(fraux_value *v);
+
 void fraux_set_number(fraux_value *v, long int num);
 
 void fraux_set_string(fraux_value *v, const char *s, size_t len);
+
+void fraux_set_list(fraux_value *v, size_t capacity);
 
 #endif

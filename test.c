@@ -20,7 +20,7 @@ static void parse_result_test(const char *s, size_t len, int result)
 {
     fraux_value v;
     int res = fraux_parse(&v, s, len);
-    ASSERT(res, result);
+    assert(res == result);
 }
 
 static void parse_binary_string_test()
@@ -41,10 +41,36 @@ static void test_parse_string()
     parse_binary_string_test();
 }
 
+static void parse_empty_list_test()
+{
+    fraux_value v;
+    assert(fraux_parse(&v, "le", 2) == FRAUX_PARSE_OK);
+    assert(fraux_get_type(&v) == FRAUX_LIST);
+    assert(v.u.l.size == 0);
+}
+
+static void parse_recursive_list_test()
+{
+    fraux_value v;
+    assert(fraux_parse(&v, "ll2:abe2:cde", 12) == FRAUX_PARSE_OK);
+    assert(fraux_get_type(&v) == FRAUX_LIST);
+    assert(v.u.l.size == 2);
+
+    assert(fraux_get_type(&v.u.l.e[0]) == FRAUX_LIST);
+    assert(v.u.l.e[0].u.l.size == 1);
+}
+
+static void test_parse_list()
+{
+    parse_empty_list_test();
+    parse_recursive_list_test();
+}
+
 static void test_parse()
 {
     test_parse_number();
     test_parse_string();
+    test_parse_list();
 }
 
 int main(int argc, char const *argv[])
