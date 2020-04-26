@@ -43,6 +43,8 @@ int fraux_parse(fraux_value *v, const char *bencode, size_t len);
 
 fraux_type fraux_get_type(fraux_value *v);
 
+void fraux_init(fraux_value *v);
+
 void fraux_clean(fraux_value *v);
 
 void fraux_set_number(fraux_value *v, long int num);

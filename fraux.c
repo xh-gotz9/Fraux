@@ -126,6 +126,7 @@ static int fraux_parse_list(fraux_conext *c, fraux_value *v)
     for (;;)
     {
         fraux_value e;
+        fraux_init(&e);
         switch (c->bencode[c->pos])
         {
         case 'e':
@@ -189,6 +190,12 @@ int fraux_parse(fraux_value *v, const char *bencode, size_t len)
     return fraux_parse_value(&context, v);
 }
 
+void fraux_init(fraux_value *v)
+{
+    assert(v != NULL);
+    memset(v, 0, sizeof(fraux_value));
+}
+
 void fraux_clean(fraux_value *v)
 {
     assert(v != NULL);
@@ -218,7 +225,6 @@ fraux_type fraux_get_type(fraux_value *v)
 void fraux_set_number(fraux_value *v, long int num)
 {
     assert(v != NULL);
-    fraux_clean(v);
     v->u.n = num;
     v->u.n = FRAUX_NUMBER;
 }
@@ -226,7 +232,6 @@ void fraux_set_number(fraux_value *v, long int num)
 void fraux_set_string(fraux_value *v, const char *s, size_t len)
 {
     assert(v != NULL && (s != NULL || len == 0));
-    fraux_clean(v);
     v->u.s.s = malloc(len + 1);
     memcpy(v->u.s.s, s, len);
     v->u.s.s[len] = '\0';
@@ -237,7 +242,6 @@ void fraux_set_string(fraux_value *v, const char *s, size_t len)
 void fraux_set_list(fraux_value *v, size_t capacity)
 {
     assert(v != NULL);
-    fraux_clean(v);
     v->type = FRAUX_LIST;
     v->u.l.size = 0;
     v->u.l.capacity = capacity;
