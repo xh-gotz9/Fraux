@@ -155,8 +155,52 @@ static int fraux_parse_list(fraux_conext *c, fraux_value *v)
         }
     }
 break_loop:
-    for (size_t i = 0; i < size; i++)
-        fraux_clean(((fraux_value *)(c->stack.s + c->stack.top)) + i);
+    return ret;
+}
+
+static int fraux_parse_dictionary(fraux_conext *c, fraux_value *v)
+{
+    assert(v != NULL);
+    assert(c->bencode[c->pos++] == 'd');
+
+    int ret;
+    size_t size = 0;
+    for (;;)
+    {
+        if (c->bencode[c->pos] == 'e')
+        {
+            c->pos++;
+            fraux_set_dictionary(v, size);
+            if (size > 0)
+                memcpy(v->u.d.e, fraux_conext_pop(c, size * sizeof(fraux_dict_member)), size * (sizeof(fraux_dict_member)));
+            v->u.d.size = size;
+            ret = FRAUX_PARSE_OK;
+            break;
+        }
+
+        fraux_value key;
+        fraux_dict_member m;
+        fraux_init(&key);
+        fraux_init(&m.v);
+
+        /* parse key */
+        if ((ret = fraux_parse_value(c, &key)) != FRAUX_PARSE_OK)
+            break;
+
+        if (fraux_get_type(&key) != FRAUX_STRING)
+        {
+            ret = FRAUX_PARSE_INVALID_VALUE;
+            break;
+        }
+        memcpy(&m.k, &key.u.s, sizeof(struct bstring));
+
+        /* parse value*/
+        if ((ret = fraux_parse_value(c, &m.v)) != FRAUX_PARSE_OK)
+            break;
+
+        memcpy(fraux_conext_push(c, sizeof(fraux_dict_member)), &m, sizeof(fraux_dict_member));
+        size++;
+    }
 
     return ret;
 }
@@ -169,6 +213,8 @@ static int fraux_parse_value(fraux_conext *c, fraux_value *v)
         return fraux_parse_number(c, v);
     case 'l':
         return fraux_parse_list(c, v);
+    case 'd':
+        return fraux_parse_dictionary(c, v);
     default:
         if (c->bencode[c->pos] >= '0' || c->bencode[c->pos] <= '9')
         {
@@ -211,6 +257,15 @@ void fraux_clean(fraux_value *v)
         }
         free(v->u.l.e);
         break;
+    case FRAUX_DICTIONARY:
+        for (size_t i = 0; i < v->u.d.size; i++)
+        {
+            fraux_dict_member *e = v->u.d.e + i;
+            free(e->k.s); /* free key string */
+            fraux_clean(&e->v);
+        }
+        free(v->u.d.e);
+        break;
     }
     memset(v, 0, sizeof(fraux_value));
     v->type = FRAUX_UNKNOWN;
@@ -225,6 +280,7 @@ fraux_type fraux_get_type(fraux_value *v)
 void fraux_set_number(fraux_value *v, long int num)
 {
     assert(v != NULL);
+    fraux_clean(v);
     v->u.n = num;
     v->u.n = FRAUX_NUMBER;
 }
@@ -232,6 +288,7 @@ void fraux_set_number(fraux_value *v, long int num)
 void fraux_set_string(fraux_value *v, const char *s, size_t len)
 {
     assert(v != NULL && (s != NULL || len == 0));
+    fraux_clean(v);
     v->u.s.s = malloc(len + 1);
     memcpy(v->u.s.s, s, len);
     v->u.s.s[len] = '\0';
@@ -242,8 +299,19 @@ void fraux_set_string(fraux_value *v, const char *s, size_t len)
 void fraux_set_list(fraux_value *v, size_t capacity)
 {
     assert(v != NULL);
+    fraux_clean(v);
     v->type = FRAUX_LIST;
     v->u.l.size = 0;
     v->u.l.capacity = capacity;
     v->u.l.e = capacity > 0 ? malloc(capacity * (sizeof(fraux_value))) : NULL;
+}
+
+void fraux_set_dictionary(fraux_value *v, size_t capacity)
+{
+    assert(v != NULL);
+    fraux_clean(v);
+    v->type = FRAUX_DICTIONARY;
+    v->u.d.size = 0;
+    v->u.d.capacity = capacity;
+    v->u.d.e = capacity > 0 ? malloc(capacity * sizeof(fraux_dict_member)) : NULL;
 }

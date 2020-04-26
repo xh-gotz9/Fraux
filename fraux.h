@@ -13,6 +13,7 @@ typedef enum
 } fraux_type;
 
 typedef struct fraux_value fraux_value;
+typedef struct fraux_dict_member fraux_dict_member;
 
 typedef struct fraux_value
 {
@@ -29,8 +30,19 @@ typedef struct fraux_value
             fraux_value *e;
             size_t size, capacity;
         } l;
+        struct dictionary
+        {
+            fraux_dict_member *e;
+            size_t size, capacity;
+        } d;
     } u;
 } fraux_value;
+
+struct fraux_dict_member
+{
+    struct bstring k;
+    fraux_value v;
+};
 
 enum
 {
@@ -52,5 +64,7 @@ void fraux_set_number(fraux_value *v, long int num);
 void fraux_set_string(fraux_value *v, const char *s, size_t len);
 
 void fraux_set_list(fraux_value *v, size_t capacity);
+
+void fraux_set_dictionary(fraux_value *v, size_t capacity);
 
 #endif
