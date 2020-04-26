@@ -2,4 +2,5 @@
 A bencode decode lib.
 
 # TODO list
-- support binary string.
+- ~~support binary string~~.
+- list / dictionary structure operations.
