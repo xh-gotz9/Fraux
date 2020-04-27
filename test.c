@@ -106,9 +106,53 @@ static void test_parse()
     test_parse_dictionary();
 }
 
+#define STRINGTIFY_TEST(bencode, length)                            \
+    do                                                              \
+    {                                                               \
+        fraux_value v;                                              \
+        fraux_init(&v);                                             \
+        assert(fraux_parse(&v, bencode, length) == FRAUX_PARSE_OK); \
+        size_t len;                                                 \
+        char *str = fraux_stringtify(&v, &len);                     \
+        assert(length == len);                                      \
+        assert(memcmp(bencode, str, length) == 0);                  \
+    } while (0);
+
+static void test_stringtify_number()
+{
+    STRINGTIFY_TEST("i32e", 4);
+    STRINGTIFY_TEST("i3232545342e", 12);
+}
+
+static void test_stringtify_string()
+{
+    STRINGTIFY_TEST("2:32", 4);
+    STRINGTIFY_TEST("4:\000sad", 6);
+}
+
+static void test_stringtify_list()
+{
+    STRINGTIFY_TEST("le", 2);
+    STRINGTIFY_TEST("l4:\000DATi322ee", 13);
+}
+
+static void test_stringtify_dictionary()
+{
+    STRINGTIFY_TEST("de", 2);
+    STRINGTIFY_TEST("d2:k14:str12:k2i2e2:k3li1e4:str2l5:list3ed1:k1:veee", 51);
+}
+
+static void test_stringtify()
+{
+    test_stringtify_number();
+    test_stringtify_string();
+    test_stringtify_list();
+    test_stringtify_dictionary();
+}
+
 int main(int argc, char const *argv[])
 {
     test_parse();
-
+    test_stringtify();
     return 0;
 }

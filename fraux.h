@@ -13,6 +13,7 @@ typedef enum
 } fraux_type;
 
 typedef struct fraux_value fraux_value;
+typedef struct bstring bstring;
 typedef struct fraux_dict_member fraux_dict_member;
 
 typedef struct fraux_value
@@ -52,6 +53,8 @@ enum
 };
 
 int fraux_parse(fraux_value *v, const char *bencode, size_t len);
+
+char *fraux_stringtify(fraux_value *v, size_t *length);
 
 fraux_type fraux_get_type(fraux_value *v);
 

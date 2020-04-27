@@ -2,6 +2,7 @@
 
 #include <assert.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <stdint.h>
 #include <string.h>
 
@@ -234,6 +235,57 @@ int fraux_parse(fraux_value *v, const char *bencode, size_t len)
     context.pos = 0;
     v->type = FRAUX_UNKNOWN;
     return fraux_parse_value(&context, v);
+}
+
+static void fraux_stringtify_value(fraux_conext *c, fraux_value *v)
+{
+    switch (v->type)
+    {
+    case FRAUX_NUMBER:
+        c->stack.top -= 32 - sprintf(fraux_conext_push(c, 32), "i%lde", v->u.n);
+        break;
+    case FRAUX_STRING:
+        c->stack.top -= 32 - sprintf(fraux_conext_push(c, 32), "%ld:", v->u.s.len);
+        memcpy(fraux_conext_push(c, v->u.s.len), v->u.s.s, v->u.s.len);
+        break;
+    case FRAUX_LIST:
+        *(char *)(fraux_conext_push(c, 1)) = 'l';
+        for (size_t i = 0; i < v->u.l.size; i++)
+        {
+            fraux_stringtify_value(c, v->u.l.e + i);
+        }
+        *(char *)(fraux_conext_push(c, 1)) = 'e';
+        break;
+    case FRAUX_DICTIONARY:
+        *(char *)(fraux_conext_push(c, 1)) = 'd';
+        for (size_t i = 0; i < v->u.d.size; i++)
+        {
+            /* write key */
+            c->stack.top -= 32 - sprintf(fraux_conext_push(c, 32), "%ld:", v->u.d.e[i].k.len);
+            memcpy(fraux_conext_push(c, v->u.d.e[i].k.len), v->u.d.e[i].k.s, v->u.d.e[i].k.len);
+
+            /* write value */
+            fraux_stringtify_value(c, &v->u.d.e[i].v);
+        }
+        *(char *)(fraux_conext_push(c, 1)) = 'e';
+        break;
+    default:
+        assert(!"invalid type");
+    }
+}
+
+char *fraux_stringtify(fraux_value *v, size_t *length)
+{
+    assert(v != NULL);
+    fraux_conext c;
+    char *ret;
+    memset(&c, 0, sizeof(fraux_conext));
+    fraux_stringtify_value(&c, v);
+    if (length)
+        *length = c.stack.top;
+    *(char *)(fraux_conext_push(&c, 1)) = '\0';
+    assert((ret = realloc(c.stack.s, c.stack.top + 1)) != NULL);
+    return ret;
 }
 
 void fraux_init(fraux_value *v)
