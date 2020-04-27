@@ -53,21 +53,17 @@ enum
 };
 
 int fraux_parse(fraux_value *v, const char *bencode, size_t len);
-
 char *fraux_stringtify(fraux_value *v, size_t *length);
+
+void fraux_init(fraux_value *v);
+void fraux_clean(fraux_value *v);
 
 fraux_type fraux_get_type(fraux_value *v);
 
-void fraux_init(fraux_value *v);
-
-void fraux_clean(fraux_value *v);
-
+/* set value */
 void fraux_set_number(fraux_value *v, long int num);
-
 void fraux_set_string(fraux_value *v, const char *s, size_t len);
-
 void fraux_set_list(fraux_value *v, size_t capacity);
-
 void fraux_set_dictionary(fraux_value *v, size_t capacity);
 
 #endif
