@@ -21,13 +21,13 @@ clean:
 	rm -rf $(TEST_DIR)/*.o $(TEST_DIR)/*.gch
 
 test.o: test.h test.c
-	$(COMPILE_CMD)
+	$(COMPILE_CMD) $(DEBUG)
 
 fraux.o: fraux.h fraux.c
-	$(COMPILE_CMD)
+	$(COMPILE_CMD) $(DEBUG)
 
 test: test.o fraux.o
-	$(BUILD_CMD)
+	$(BUILD_CMD) $(DEBUG)
 
 check: buildDir test
 	./$(BUILD_DIR)/test

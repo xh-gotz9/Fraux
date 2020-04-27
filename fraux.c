@@ -101,7 +101,7 @@ static int fraux_parse_string(fraux_conext *c, fraux_value *v)
     }
 
     /* read string length */
-    long int len = strtol(head, NULL, 10);
+    size_t len = strtoul(head, NULL, 10);
 
     /* check data range */
     if (p + len > c->len)
