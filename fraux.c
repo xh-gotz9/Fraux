@@ -119,7 +119,8 @@ static int fraux_parse_string(fraux_conext *c, fraux_value *v)
 static int fraux_parse_list(fraux_conext *c, fraux_value *v)
 {
     assert(v != NULL);
-    assert(c->bencode[c->pos++] == 'l');
+    assert(c->bencode[c->pos] == 'l');
+    c->pos++;
 
     int ret;
     size_t size = 0;
@@ -162,7 +163,8 @@ break_loop:
 static int fraux_parse_dictionary(fraux_conext *c, fraux_value *v)
 {
     assert(v != NULL);
-    assert(c->bencode[c->pos++] == 'd');
+    assert(c->bencode[c->pos] == 'd');
+    c->pos++;
 
     int ret;
     size_t size = 0;
@@ -284,7 +286,8 @@ char *fraux_stringtify(fraux_value *v, size_t *length)
     if (length)
         *length = c.stack.top;
     *(char *)(fraux_conext_push(&c, 1)) = '\0';
-    assert((ret = realloc(c.stack.s, c.stack.top + 1)) != NULL);
+    ret = realloc(c.stack.s, c.stack.top + 1);
+    assert(ret != NULL);
     return ret;
 }
 
