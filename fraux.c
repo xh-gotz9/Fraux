@@ -285,9 +285,9 @@ char *fraux_stringtify(fraux_value *v, size_t *length)
     fraux_stringtify_value(&c, v);
     if (length)
         *length = c.stack.top;
-    *(char *)(fraux_conext_push(&c, 1)) = '\0';
     ret = realloc(c.stack.s, c.stack.top + 1);
     assert(ret != NULL);
+    ret[c.stack.top] = '\0';
     return ret;
 }
 
