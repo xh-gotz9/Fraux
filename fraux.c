@@ -353,7 +353,7 @@ void fraux_deepcopy(fraux_value *dest, const fraux_value *src)
         dest->u.l.e = malloc(src->u.l.capacity * sizeof(fraux_value));
         for (size_t i = 0; i < src->u.l.size; i++)
         {
-            fraux_copy(dest->u.l.e + i, src->u.l.e + i);
+            fraux_deepcopy(dest->u.l.e + i, src->u.l.e + i);
         }
         break;
     case FRAUX_DICTIONARY:
@@ -363,7 +363,7 @@ void fraux_deepcopy(fraux_value *dest, const fraux_value *src)
         {
             dest->u.d.e[i].k.len = src->u.d.e[i].k.len;
             memcpy((dest->u.d.e[i].k.s = malloc(dest->u.d.e[i].k.len)), src->u.d.e[i].k.s, src->u.d.e[i].k.len);
-            fraux_copy(&dest->u.d.e[i].v, &src->u.d.e[i].v);
+            fraux_deepcopy(&dest->u.d.e[i].v, &src->u.d.e[i].v);
         }
         break;
     default:
