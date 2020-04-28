@@ -145,7 +145,7 @@ static int fraux_parse_list(fraux_conext *c, fraux_value *v)
                 ret = FRAUX_PARSE_MISS_QUOTATION_MARK;
             }
 
-            fraux_clean(&e);
+            fraux_init(&e);
             if ((ret = fraux_parse_value(c, &e)) != FRAUX_PARSE_OK)
             {
                 fraux_conext_pop(c, size * sizeof(fraux_value));
@@ -285,9 +285,9 @@ char *fraux_stringtify(fraux_value *v, size_t *length)
     fraux_stringtify_value(&c, v);
     if (length)
         *length = c.stack.top;
-    *(char *)(fraux_conext_push(&c, 1)) = '\0';
     ret = realloc(c.stack.s, c.stack.top + 1);
     assert(ret != NULL);
+    ret[c.stack.top] = '\0';
     return ret;
 }
 
@@ -335,7 +335,7 @@ fraux_type fraux_get_type(fraux_value *v)
 void fraux_set_number(fraux_value *v, long int num)
 {
     assert(v != NULL);
-    fraux_clean(v);
+    fraux_init(v);
     v->u.n = num;
     v->u.n = FRAUX_NUMBER;
 }
@@ -343,7 +343,7 @@ void fraux_set_number(fraux_value *v, long int num)
 void fraux_set_string(fraux_value *v, const char *s, size_t len)
 {
     assert(v != NULL && (s != NULL || len == 0));
-    fraux_clean(v);
+    fraux_init(v);
     v->u.s.s = malloc(len + 1);
     memcpy(v->u.s.s, s, len);
     v->u.s.s[len] = '\0';
@@ -354,7 +354,7 @@ void fraux_set_string(fraux_value *v, const char *s, size_t len)
 void fraux_set_list(fraux_value *v, size_t capacity)
 {
     assert(v != NULL);
-    fraux_clean(v);
+    fraux_init(v);
     v->type = FRAUX_LIST;
     v->u.l.size = 0;
     v->u.l.capacity = capacity;
@@ -364,7 +364,7 @@ void fraux_set_list(fraux_value *v, size_t capacity)
 void fraux_set_dictionary(fraux_value *v, size_t capacity)
 {
     assert(v != NULL);
-    fraux_clean(v);
+    fraux_init(v);
     v->type = FRAUX_DICTIONARY;
     v->u.d.size = 0;
     v->u.d.capacity = capacity;
