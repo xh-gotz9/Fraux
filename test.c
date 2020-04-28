@@ -150,9 +150,39 @@ static void test_stringtify()
     test_stringtify_dictionary();
 }
 
+#define COPY_TEST(BENCODE, LEN)                                   \
+    do                                                            \
+    {                                                             \
+        fraux_value v1, v2;                                       \
+        fraux_init(&v1);                                          \
+        fraux_init(&v2);                                          \
+        assert(fraux_parse(&v1, BENCODE, LEN) == FRAUX_PARSE_OK); \
+        fraux_copy(&v2, &v1);                                     \
+        size_t length;                                            \
+        char *str = fraux_stringtify(&v2, &length);               \
+        assert(length == LEN);                                    \
+        assert(memcmp(BENCODE, str, LEN) == 0);                   \
+        fraux_clean(&v1);                                         \
+    } while (0);
+
+static void test_copy()
+{
+    COPY_TEST("i32e", 4);
+    COPY_TEST("5:22\000DA", 7);
+    COPY_TEST("5:22CDA", 7);
+    COPY_TEST("ll2:abe2:cde", 12);
+    COPY_TEST("d1:ni2e1:s3:str1:ll2:e12:e22:e32:e4e1:dd2:k12:v12:k22:v2ee", 58);
+}
+
+static void test_value_operation()
+{
+    test_copy();
+}
+
 int main(int argc, char const *argv[])
 {
     test_parse();
     test_stringtify();
+    test_value_operation();
     return 0;
 }
