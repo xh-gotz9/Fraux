@@ -73,10 +73,11 @@ void fraux_set_dictionary(fraux_value *v, size_t capacity);
 /* fraux_list */
 void fraux_list_insert(fraux_value *l, fraux_value *e, size_t idx);
 void fraux_list_delete(fraux_value *l, size_t idx, fraux_value *e);
-void fraux_list_append(fraux_value *l, fraux_value *e);
+void fraux_list_push(fraux_value *l, fraux_value *e);
+void fraux_list_pop(fraux_value *l, fraux_value *e);
 
 /* fraux_dictionary*/
-void fraux_dictinary_add(fraux_value *l, fraux_dict_member *e);
-void fraux_dictinary_remove(fraux_value *l, char *key, size_t len, fraux_dict_member *e);
+void fraux_dictinary_add(fraux_value *d, fraux_dict_member *m);
+void fraux_dictinary_remove(fraux_value *d, char *key, size_t len, fraux_value *m);
 
 #endif
