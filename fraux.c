@@ -513,7 +513,12 @@ void fraux_list_delete(fraux_value *l, size_t idx, fraux_value *e)
     list->size--;
 }
 
-void fraux_list_append(fraux_value *l, fraux_value *e)
+void fraux_list_push(fraux_value *l, fraux_value *e)
 {
     fraux_list_insert(l, e, l->u.l.size);
+}
+
+void fraux_list_pop(fraux_value *l, fraux_value *e)
+{
+    fraux_list_delete(l, l->u.l.size - 1, e);
 }
