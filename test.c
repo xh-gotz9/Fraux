@@ -154,8 +154,6 @@ static void test_stringtify()
     do                                                            \
     {                                                             \
         fraux_value v1, v2;                                       \
-        fraux_init(&v1);                                          \
-        fraux_init(&v2);                                          \
         assert(fraux_parse(&v1, BENCODE, LEN) == FRAUX_PARSE_OK); \
         fraux_copy(&v2, &v1);                                     \
         size_t length;                                            \
@@ -174,9 +172,82 @@ static void test_copy()
     COPY_TEST("d1:ni2e1:s3:str1:ll2:e12:e22:e32:e4e1:dd2:k12:v12:k22:v2ee", 58);
 }
 
+static void test_deepcopy_number()
+{
+    fraux_value v1, v2;
+    assert(fraux_parse(&v1, "i32e", 4) == FRAUX_PARSE_OK);
+    fraux_deepcopy(&v2, &v1);
+
+    size_t length;
+    char *str = fraux_stringtify(&v2, &length);
+    assert(length == 4);
+    assert(memcmp("i32e", str, 4) == 0);
+
+    fraux_clean(&v1);
+    fraux_clean(&v2);
+}
+
+static void test_deepcopy_string()
+{
+    fraux_value v1, v2;
+    assert(fraux_parse(&v1, "3:abc", 5) == FRAUX_PARSE_OK);
+    fraux_deepcopy(&v2, &v1);
+
+    size_t length;
+    char *str = fraux_stringtify(&v2, &length);
+    assert(length == 5);
+    assert(memcmp("3:abc", str, 5) == 0);
+
+    assert(v1.u.s.s != v2.u.s.s);
+
+    fraux_clean(&v1);
+    fraux_clean(&v2);
+}
+
+static void test_deepcopy_list()
+{
+    fraux_value v1, v2;
+    assert(fraux_parse(&v1, "ll2:abe2:cde", 12) == FRAUX_PARSE_OK);
+    fraux_deepcopy(&v2, &v1);
+
+    size_t length;
+    char *str = fraux_stringtify(&v2, &length);
+    assert(length == 12);
+    assert(memcmp("ll2:abe2:cde", str, 12) == 0);
+
+    assert(v1.u.l.e != v2.u.l.e);
+    assert(v1.u.l.e[0].u.l.e != v2.u.l.e[0].u.l.e);
+
+    fraux_clean(&v1);
+    fraux_clean(&v2);
+}
+
+static void test_deepcopy_dictionary()
+{
+    fraux_value v1, v2;
+    assert(fraux_parse(&v1, "d1:ni2e1:s3:str1:ll2:e12:e22:e32:e4e1:dd2:k12:v12:k22:v2ee", 58) == FRAUX_PARSE_OK);
+    fraux_deepcopy(&v2, &v1);
+
+    size_t length;
+    char *str = fraux_stringtify(&v2, &length);
+    assert(length == 58);
+    assert(memcmp("d1:ni2e1:s3:str1:ll2:e12:e22:e32:e4e1:dd2:k12:v12:k22:v2ee", str, 58) == 0);
+
+    assert(memcmp(&v1, &v2, sizeof(fraux_value)) != 0);
+    assert(v1.u.d.size == v2.u.d.size);
+    assert(memcmp(&v1.u.d.e, &v2.u.d.e, sizeof(fraux_dict_member) * v1.u.d.size) != 0);
+
+    fraux_clean(&v1);
+    fraux_clean(&v2);
+}
+
 static void test_value_operation()
 {
     test_copy();
+    test_deepcopy_number();
+    test_deepcopy_string();
+    test_deepcopy_list();
+    test_deepcopy_dictionary();
 }
 
 int main(int argc, char const *argv[])
