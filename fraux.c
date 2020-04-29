@@ -522,3 +522,69 @@ void fraux_list_pop(fraux_value *l, fraux_value *e)
 {
     fraux_list_delete(l, l->u.l.size - 1, e);
 }
+
+void fraux_dictinary_add(fraux_value *d, fraux_dict_member *m)
+{
+    assert(d != NULL);
+    assert(m != NULL);
+
+    struct dictionary *dict = &d->u.d;
+
+    if (dict->size + 1 > dict->capacity)
+    {
+        dict->e = realloc(dict->e, sizeof(fraux_dict_member) * (dict->capacity + 2));
+        dict->capacity += 2;
+    }
+
+    memcpy(dict->e + dict->size, m, sizeof(fraux_dict_member));
+    dict->size++;
+}
+
+void fraux_dictinary_remove(fraux_value *d, char *key, size_t len, fraux_value *v)
+{
+    assert(d != NULL);
+    size_t index;
+    fraux_value val;
+    fraux_dictinary_find(d, key, len, &index, &val);
+
+    if (val.type == FRAUX_UNKNOWN)
+        return;
+
+    if (v)
+        fraux_copy(v, &val);
+
+    for (size_t i = index + 1; i < d->u.d.size; i++)
+    {
+        memcpy(d->u.d.e + i - 1, d->u.d.e + i, sizeof(fraux_dict_member));
+    }
+    d->u.d.size--;
+}
+
+void fraux_dictinary_find(fraux_value *d, char *key, size_t len, size_t *index, fraux_value *v)
+{
+    assert(d != NULL);
+
+    struct dictionary *dict = &d->u.d;
+
+    if (v)
+        fraux_init(v);
+
+    size_t i = 0;
+    for (; i < dict->size; i++)
+    {
+        char *k = dict->e[i].k.s;
+        size_t l = dict->e[i].k.len;
+
+        if (l != len)
+            continue;
+
+        if (memcmp(key, k, len) == 0)
+        {
+            if (index)
+                *index = i;
+            if (v)
+                fraux_copy(v, &dict->e[i].v);
+            break;
+        }
+    }
+}
