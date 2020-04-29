@@ -468,3 +468,52 @@ void fraux_set_dictionary(fraux_value *v, size_t capacity)
     v->u.d.capacity = capacity;
     v->u.d.e = capacity > 0 ? malloc(capacity * sizeof(fraux_dict_member)) : NULL;
 }
+
+void fraux_list_insert(fraux_value *l, fraux_value *e, size_t idx)
+{
+    assert(l != NULL);
+    assert(e != NULL);
+
+    struct blist *list = &l->u.l;
+
+    if (list->size + 1 > list->capacity)
+    {
+        list->e = realloc(list->e, sizeof(fraux_value) * (list->capacity + 2));
+        list->capacity += 2;
+    }
+
+    size_t index = list->size + 1 < idx ? list->size + 1 : idx;
+    size_t i = list->size;
+    while (i > index)
+    {
+        fraux_copy(list->e + (i--), list->e + i);
+    }
+    fraux_copy(list->e + i, e);
+    list->size++;
+}
+
+void fraux_list_delete(fraux_value *l, size_t idx, fraux_value *e)
+{
+    assert(l != NULL);
+    assert(e != NULL);
+
+    struct blist *list = &l->u.l;
+
+    if (idx >= list->size)
+    {
+        fraux_init(e);
+        return;
+    }
+
+    fraux_copy(e, list->e + idx);
+    for (size_t i = idx + 1; i < list->size; i++)
+    {
+        fraux_copy(list->e + i - 1, list->e + i);
+    }
+    list->size--;
+}
+
+void fraux_list_append(fraux_value *l, fraux_value *e)
+{
+    fraux_list_insert(l, e, l->u.l.size);
+}
