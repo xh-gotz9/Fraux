@@ -262,6 +262,7 @@ static void test_equals()
 
 static void test_value_operation()
 {
+    /* fraux_value */
     test_copy();
     test_deepcopy_number();
     test_deepcopy_string();
@@ -270,10 +271,82 @@ static void test_value_operation()
     test_equals();
 }
 
+static void test_list_operation()
+{
+    fraux_value l, e1, e2, e3, tmp;
+    fraux_set_list(&l, 0);
+    fraux_parse(&e1, "2:E1", 4);
+    fraux_parse(&e2, "2:E1", 4);
+    fraux_parse(&e3, "2:E1", 4);
+
+    fraux_list_push(&l, &e1);
+    assert(l.u.l.size == 1);
+    assert(fraux_equals(&e1, &l.u.l.e[0]));
+
+    /* index > size + 1*/
+    fraux_list_insert(&l, &e2, 3);
+    assert(l.u.l.size == 2);
+    assert(fraux_equals(&e2, &l.u.l.e[1]));
+
+    fraux_list_push(&l, &e3);
+    assert(l.u.l.size == 3);
+    assert(fraux_equals(&e3, &l.u.l.e[2]));
+
+    fraux_list_delete(&l, 4, &tmp);
+    assert(l.u.l.size == 3);
+    assert(tmp.type == FRAUX_UNKNOWN);
+
+    fraux_list_delete(&l, 1, &tmp);
+    assert(l.u.l.size == 2);
+    assert(fraux_equals(&e3, &l.u.l.e[1]));
+
+    fraux_list_pop(&l, &tmp);
+    assert(l.u.l.size == 1);
+    assert(fraux_equals(&tmp, &e3));
+}
+
+void test_dictionary_operation()
+{
+    fraux_value d;
+    fraux_set_dictionary(&d, 0);
+
+    fraux_dict_member m1 = {{"k1", 2}}, m2 = {{"k2", 2}}, m3 = {{"k3", 2}};
+    fraux_parse(&m1.v, "2:v1", 4);
+    fraux_parse(&m2.v, "2:v2", 4);
+    fraux_parse(&m3.v, "2:v3", 4);
+
+    fraux_dictinary_add(&d, &m1);
+    assert(d.u.d.size == 1);
+
+    fraux_dictinary_add(&d, &m2);
+    assert(d.u.d.size == 2);
+
+    fraux_dictinary_add(&d, &m3);
+    assert(d.u.d.size == 3);
+
+    size_t index;
+    fraux_value v;
+    fraux_dictinary_find(&d, "k1", 2, &index, &v);
+    assert(index == 0);
+    assert(fraux_equals(&v, &m1.v));
+
+    fraux_dictinary_remove(&d, "k2", 2, &v);
+    assert(v.type == FRAUX_STRING);
+
+    fraux_dictinary_find(&d, "k3", 2, &index, &v);
+    assert(v.type == FRAUX_STRING);
+    assert(index == 1);
+
+    fraux_dictinary_remove(&d, "k2", 2, &v);
+    assert(v.type == FRAUX_UNKNOWN);
+}
+
 int main(int argc, char const *argv[])
 {
     test_parse();
     test_stringtify();
     test_value_operation();
+    test_list_operation();
+    test_dictionary_operation();
     return 0;
 }
