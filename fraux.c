@@ -548,7 +548,10 @@ void fraux_dictinary_remove(fraux_value *d, char *key, size_t len, fraux_value *
     fraux_dictinary_find(d, key, len, &index, &val);
 
     if (val.type == FRAUX_UNKNOWN)
+    {
+        fraux_init(v);
         return;
+    }
 
     if (v)
         fraux_copy(v, &val);
@@ -566,9 +569,6 @@ void fraux_dictinary_find(fraux_value *d, char *key, size_t len, size_t *index, 
 
     struct dictionary *dict = &d->u.d;
 
-    if (v)
-        fraux_init(v);
-
     size_t i = 0;
     for (; i < dict->size; i++)
     {
@@ -584,7 +584,10 @@ void fraux_dictinary_find(fraux_value *d, char *key, size_t len, size_t *index, 
                 *index = i;
             if (v)
                 fraux_copy(v, &dict->e[i].v);
-            break;
+            return;
         }
     }
+
+    if (v)
+        fraux_init(v);
 }
