@@ -325,20 +325,24 @@ void test_dictionary_operation()
     assert(d.u.d.size == 3);
 
     size_t index;
-    fraux_value v;
-    fraux_dictinary_find(&d, "k1", 2, &index, &v);
+    fraux_value v, *p;
+    fraux_dict_member m;
+    p = fraux_dictinary_find(&d, "k1", 2, &index);
+    assert(p != NULL);
     assert(index == 0);
-    assert(fraux_equals(&v, &m1.v));
+    assert(fraux_equals(p, &m1.v));
 
-    fraux_dictinary_remove(&d, "k2", 2, &v);
-    assert(v.type == FRAUX_STRING);
+    fraux_dictinary_remove(&d, "k2", 2, &m);
+    assert(d.u.d.size == 2);
 
-    fraux_dictinary_find(&d, "k3", 2, &index, &v);
-    assert(v.type == FRAUX_STRING);
+    p = fraux_dictinary_find(&d, "k3", 2, &index);
+    assert(p != NULL);
+    assert(p->type == FRAUX_STRING);
     assert(index == 1);
 
-    fraux_dictinary_remove(&d, "k2", 2, &v);
-    assert(v.type == FRAUX_UNKNOWN);
+    fraux_dictinary_remove(&d, "k2", 2, &m);
+    assert(m.k.s == NULL);
+    assert(m.v.type == FRAUX_UNKNOWN);
 }
 
 int main(int argc, char const *argv[])

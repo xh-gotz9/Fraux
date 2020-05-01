@@ -550,21 +550,19 @@ void fraux_dictinary_add(fraux_value *d, fraux_dict_member *m)
     dict->size++;
 }
 
-void fraux_dictinary_remove(fraux_value *d, char *key, size_t len, fraux_value *v)
+void fraux_dictinary_remove(fraux_value *d, char *key, size_t len, fraux_dict_member *m)
 {
     assert(d != NULL);
     size_t index;
-    fraux_value val;
-    fraux_dictinary_find(d, key, len, &index, &val);
-
-    if (val.type == FRAUX_UNKNOWN)
+    fraux_value *val = fraux_dictinary_find(d, key, len, &index);
+    if (!val)
     {
-        fraux_init(v);
+        memset(m, 0, sizeof(fraux_dict_member));
         return;
     }
 
-    if (v)
-        fraux_copy(v, &val);
+    if (m)
+        memcpy(m, d->u.d.e + index, sizeof(fraux_dict_member));
 
     for (size_t i = index + 1; i < d->u.d.size; i++)
     {
@@ -573,7 +571,7 @@ void fraux_dictinary_remove(fraux_value *d, char *key, size_t len, fraux_value *
     d->u.d.size--;
 }
 
-void fraux_dictinary_find(fraux_value *d, char *key, size_t len, size_t *index, fraux_value *v)
+fraux_value *fraux_dictinary_find(fraux_value *d, char *key, size_t len, size_t *index)
 {
     assert(d != NULL);
 
@@ -592,12 +590,9 @@ void fraux_dictinary_find(fraux_value *d, char *key, size_t len, size_t *index, 
         {
             if (index)
                 *index = i;
-            if (v)
-                fraux_copy(v, &dict->e[i].v);
-            return;
+            return &dict->e[i].v;
         }
     }
 
-    if (v)
-        fraux_init(v);
+    return NULL;
 }
