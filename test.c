@@ -150,9 +150,207 @@ static void test_stringtify()
     test_stringtify_dictionary();
 }
 
+#define COPY_TEST(BENCODE, LEN)                                   \
+    do                                                            \
+    {                                                             \
+        fraux_value v1, v2;                                       \
+        assert(fraux_parse(&v1, BENCODE, LEN) == FRAUX_PARSE_OK); \
+        fraux_copy(&v2, &v1);                                     \
+        size_t length;                                            \
+        char *str = fraux_stringtify(&v2, &length);               \
+        assert(length == LEN);                                    \
+        assert(memcmp(BENCODE, str, LEN) == 0);                   \
+        fraux_clean(&v1);                                         \
+    } while (0);
+
+static void test_copy()
+{
+    COPY_TEST("i32e", 4);
+    COPY_TEST("5:22\000DA", 7);
+    COPY_TEST("5:22CDA", 7);
+    COPY_TEST("ll2:abe2:cde", 12);
+    COPY_TEST("d1:ni2e1:s3:str1:ll2:e12:e22:e32:e4e1:dd2:k12:v12:k22:v2ee", 58);
+}
+
+static void test_deepcopy_number()
+{
+    fraux_value v1, v2;
+    assert(fraux_parse(&v1, "i32e", 4) == FRAUX_PARSE_OK);
+    fraux_deepcopy(&v2, &v1);
+
+    size_t length;
+    char *str = fraux_stringtify(&v2, &length);
+    assert(length == 4);
+    assert(memcmp("i32e", str, 4) == 0);
+
+    fraux_clean(&v1);
+    fraux_clean(&v2);
+}
+
+static void test_deepcopy_string()
+{
+    fraux_value v1, v2;
+    assert(fraux_parse(&v1, "3:abc", 5) == FRAUX_PARSE_OK);
+    fraux_deepcopy(&v2, &v1);
+
+    size_t length;
+    char *str = fraux_stringtify(&v2, &length);
+    assert(length == 5);
+    assert(memcmp("3:abc", str, 5) == 0);
+
+    assert(v1.u.s.s != v2.u.s.s);
+
+    fraux_clean(&v1);
+    fraux_clean(&v2);
+}
+
+static void test_deepcopy_list()
+{
+    fraux_value v1, v2;
+    assert(fraux_parse(&v1, "ll2:abe2:cde", 12) == FRAUX_PARSE_OK);
+    fraux_deepcopy(&v2, &v1);
+
+    size_t length;
+    char *str = fraux_stringtify(&v2, &length);
+    assert(length == 12);
+    assert(memcmp("ll2:abe2:cde", str, 12) == 0);
+
+    assert(v1.u.l.e != v2.u.l.e);
+    assert(v1.u.l.e[0].u.l.e != v2.u.l.e[0].u.l.e);
+
+    fraux_clean(&v1);
+    fraux_clean(&v2);
+}
+
+static void test_deepcopy_dictionary()
+{
+    fraux_value v1, v2;
+    assert(fraux_parse(&v1, "d1:ni2e1:s3:str1:ll2:e12:e22:e32:e4e1:dd2:k12:v12:k22:v2ee", 58) == FRAUX_PARSE_OK);
+    fraux_deepcopy(&v2, &v1);
+
+    size_t length;
+    char *str = fraux_stringtify(&v2, &length);
+    assert(length == 58);
+    assert(memcmp("d1:ni2e1:s3:str1:ll2:e12:e22:e32:e4e1:dd2:k12:v12:k22:v2ee", str, 58) == 0);
+
+    assert(memcmp(&v1, &v2, sizeof(fraux_value)) != 0);
+    assert(v1.u.d.size == v2.u.d.size);
+    assert(memcmp(&v1.u.d.e, &v2.u.d.e, sizeof(fraux_dict_member) * v1.u.d.size) != 0);
+
+    fraux_clean(&v1);
+    fraux_clean(&v2);
+}
+
+static void test_equals()
+{
+    fraux_value v1, v2, v3;
+    assert(fraux_parse(&v1, "d1:ni2e1:s3:str1:ll2:e12:e22:e32:e4e1:dd2:k12:v12:k22:v2ee", 58) == FRAUX_PARSE_OK);
+
+    fraux_copy(&v2, &v1);
+    assert(fraux_equals(&v1, &v2));
+
+    fraux_deepcopy(&v2, &v1);
+    assert(fraux_equals(&v1, &v2));
+
+    assert(fraux_parse(&v3, "d1:ni2e1:s3:str1:ll2:e12:e22:e32:e4e1:dd2:k12:v12:k22:v3ee", 58) == FRAUX_PARSE_OK);
+    assert(!fraux_equals(&v1, &v3));
+
+    fraux_clean(&v1);
+    fraux_clean(&v2);
+    fraux_clean(&v3);
+}
+
+static void test_value_operation()
+{
+    /* fraux_value */
+    test_copy();
+    test_deepcopy_number();
+    test_deepcopy_string();
+    test_deepcopy_list();
+    test_deepcopy_dictionary();
+    test_equals();
+}
+
+static void test_list_operation()
+{
+    fraux_value l, e1, e2, e3, tmp;
+    fraux_set_list(&l, 0);
+    fraux_parse(&e1, "2:E1", 4);
+    fraux_parse(&e2, "2:E1", 4);
+    fraux_parse(&e3, "2:E1", 4);
+
+    fraux_list_push(&l, &e1);
+    assert(l.u.l.size == 1);
+    assert(fraux_equals(&e1, &l.u.l.e[0]));
+
+    /* index > size + 1*/
+    fraux_list_insert(&l, &e2, 3);
+    assert(l.u.l.size == 2);
+    assert(fraux_equals(&e2, &l.u.l.e[1]));
+
+    fraux_list_push(&l, &e3);
+    assert(l.u.l.size == 3);
+    assert(fraux_equals(&e3, &l.u.l.e[2]));
+
+    fraux_list_delete(&l, 4, &tmp);
+    assert(l.u.l.size == 3);
+    assert(tmp.type == FRAUX_UNKNOWN);
+
+    fraux_list_delete(&l, 1, &tmp);
+    assert(l.u.l.size == 2);
+    assert(fraux_equals(&e3, &l.u.l.e[1]));
+
+    fraux_list_pop(&l, &tmp);
+    assert(l.u.l.size == 1);
+    assert(fraux_equals(&tmp, &e3));
+}
+
+void test_dictionary_operation()
+{
+    fraux_value d;
+    fraux_set_dictionary(&d, 0);
+
+    fraux_dict_member m1 = {{"k1", 2}}, m2 = {{"k2", 2}}, m3 = {{"k3", 2}};
+    fraux_parse(&m1.v, "2:v1", 4);
+    fraux_parse(&m2.v, "2:v2", 4);
+    fraux_parse(&m3.v, "2:v3", 4);
+
+    fraux_dictinary_add(&d, &m1);
+    assert(d.u.d.size == 1);
+
+    fraux_dictinary_add(&d, &m2);
+    assert(d.u.d.size == 2);
+
+    fraux_dictinary_add(&d, &m3);
+    assert(d.u.d.size == 3);
+
+    size_t index;
+    fraux_value v, *p;
+    fraux_dict_member m;
+    p = fraux_dictinary_find(&d, "k1", 2, &index);
+    assert(p != NULL);
+    assert(index == 0);
+    assert(fraux_equals(p, &m1.v));
+
+    fraux_dictinary_remove(&d, "k2", 2, &m);
+    assert(d.u.d.size == 2);
+
+    p = fraux_dictinary_find(&d, "k3", 2, &index);
+    assert(p != NULL);
+    assert(p->type == FRAUX_STRING);
+    assert(index == 1);
+
+    fraux_dictinary_remove(&d, "k2", 2, &m);
+    assert(m.k.s == NULL);
+    assert(m.v.type == FRAUX_UNKNOWN);
+}
+
 int main(int argc, char const *argv[])
 {
     test_parse();
     test_stringtify();
+    test_value_operation();
+    test_list_operation();
+    test_dictionary_operation();
     return 0;
 }
