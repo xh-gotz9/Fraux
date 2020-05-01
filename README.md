@@ -6,4 +6,4 @@ It's the encoding of `.torrent` file. It's also used for BitTorrent protocol. se
 
 # TODO list
 - ~~support binary string~~.
-- list / dictionary structure operations.
+- ~~list / dictionary structure operations~~.
