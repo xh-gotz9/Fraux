@@ -71,6 +71,7 @@ void fraux_set_list(fraux_value *v, size_t capacity);
 void fraux_set_dictionary(fraux_value *v, size_t capacity);
 
 /* fraux_list */
+fraux_value *fraux_list_get(fraux_value *l, size_t idx);
 void fraux_list_insert(fraux_value *l, fraux_value *e, size_t idx);
 void fraux_list_delete(fraux_value *l, size_t idx, fraux_value *e);
 void fraux_list_push(fraux_value *l, fraux_value *e);

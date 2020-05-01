@@ -469,6 +469,16 @@ void fraux_set_dictionary(fraux_value *v, size_t capacity)
     v->u.d.e = capacity > 0 ? malloc(capacity * sizeof(fraux_dict_member)) : NULL;
 }
 
+fraux_value *fraux_list_get(fraux_value *l, size_t idx)
+{
+    assert(l != NULL);
+
+    if (idx > l->u.l.size)
+        return NULL;
+
+    return l->u.l.e + idx;
+}
+
 void fraux_list_insert(fraux_value *l, fraux_value *e, size_t idx)
 {
     assert(l != NULL);
