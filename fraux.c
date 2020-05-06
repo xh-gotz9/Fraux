@@ -73,7 +73,7 @@ static int fraux_parse_number(fraux_conext *c, fraux_value *v)
         return FRAUX_PARSE_INVALID_VALUE;
     }
 
-    v->u.n = strtol(c->bencode + c->pos + 1, NULL, 10);
+    v->u.n = strtoll(c->bencode + c->pos + 1, NULL, 10);
     v->type = FRAUX_NUMBER;
     c->pos += p;
 
@@ -244,7 +244,7 @@ static void fraux_stringtify_value(fraux_conext *c, fraux_value *v)
     switch (v->type)
     {
     case FRAUX_NUMBER:
-        c->stack.top -= 32 - sprintf(fraux_conext_push(c, 32), "i%lde", v->u.n);
+        c->stack.top -= 32 - sprintf(fraux_conext_push(c, 32), "i%llde", v->u.n);
         break;
     case FRAUX_STRING:
         c->stack.top -= 32 - sprintf(fraux_conext_push(c, 32), "%ld:", v->u.s.len);
@@ -430,7 +430,7 @@ fraux_type fraux_get_type(fraux_value *v)
     return v->type;
 }
 
-void fraux_set_number(fraux_value *v, long int num)
+void fraux_set_number(fraux_value *v, long long num)
 {
     assert(v != NULL);
     fraux_init(v);
