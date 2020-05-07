@@ -20,7 +20,7 @@ typedef struct fraux_value
 {
     fraux_type type;
     union {
-        long int n;
+        long long n;
         struct bstring
         {
             char *s;
@@ -65,7 +65,7 @@ int fraux_equals(fraux_value *v1, fraux_value *v2);
 fraux_type fraux_get_type(fraux_value *v);
 
 /* set value */
-void fraux_set_number(fraux_value *v, long int num);
+void fraux_set_number(fraux_value *v, long long num);
 void fraux_set_string(fraux_value *v, const char *s, size_t len);
 void fraux_set_list(fraux_value *v, size_t capacity);
 void fraux_set_dictionary(fraux_value *v, size_t capacity);
