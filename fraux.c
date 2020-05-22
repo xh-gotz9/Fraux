@@ -10,7 +10,7 @@
 #define FRAUX_CONTEXT_STACK_INIT_SIZE 256
 #endif
 
-typedef struct
+typedef struct fraux_context
 {
     const char *bencode;
     size_t len, pos;
