@@ -178,12 +178,9 @@ static int fraux_parse_dictionary(fraux_conext *c, fraux_value *v)
             fraux_set_dictionary(v, size);
             if (size > 0)
             {
-                typedef int (*compare_t)(const void *, const void *);
-                compare_t cmp;
-                cmp = (compare_t)fraux_dictionary_key_cmp;
                 fraux_dict_member *list = fraux_conext_pop(c, size * sizeof(fraux_dict_member));
                 /* members sorted by key in acending order */
-                qsort(list, size, sizeof(fraux_dict_member), cmp);
+                qsort(list, size, sizeof(fraux_dict_member), (int (*)(const void *, const void *))fraux_dictionary_key_cmp);
                 memcpy(v->u.d.e, list, size * (sizeof(fraux_dict_member)));
             }
             v->u.d.size = size;
@@ -572,7 +569,7 @@ void fraux_dictinary_add(fraux_value *d, fraux_dict_member *m)
         dict->e = realloc(dict->e, sizeof(fraux_dict_member) * (dict->capacity + 2));
         dict->capacity += 2;
     }
-    
+
     if (dict->size == 0)
     {
         goto copy_member;
