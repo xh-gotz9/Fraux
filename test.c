@@ -84,9 +84,37 @@ static void parse_dict_test()
 {
     fraux_value v;
 
-    char *str = "d1:ni2e1:s3:str1:ll2:e12:e22:e32:e4e1:dd2:k12:v12:k22:v2ee";
+    char *str = "d"
+                "1:dd2:k12:v12:k22:v2e"
+                "1:ll2:e12:e22:e32:e4e"
+                "1:ni2e"
+                "1:s3:str"
+                "e";
 
     assert(fraux_parse(&v, str, strlen(str)) == FRAUX_PARSE_OK);
+    assert(fraux_get_type(&v) == FRAUX_DICTIONARY);
+
+    fraux_clean(&v);
+}
+void parse_dict_key_order_test()
+{
+    fraux_value v;
+
+    char *bencode = "d"
+                    "1:dd2:k12:v12:k22:v23:k113:v11e"
+                    "1:ni2e"
+                    "1:s3:str"
+                    "1:ll2:e12:e22:e32:e4e"
+                    "e";
+
+    char *str = "d"
+                "1:dd2:k12:v13:k113:v112:k22:v2e"
+                "1:ll2:e12:e22:e32:e4e"
+                "1:ni2e"
+                "1:s3:str"
+                "e";
+
+    assert(fraux_parse(&v, bencode, strlen(bencode)) == FRAUX_PARSE_OK);
     assert(fraux_get_type(&v) == FRAUX_DICTIONARY);
 
     fraux_clean(&v);
@@ -96,6 +124,7 @@ static void test_parse_dictionary()
 {
     parse_empty_dict_test();
     parse_dict_test();
+    parse_dict_key_order_test();
 }
 
 static void test_parse()
@@ -139,7 +168,22 @@ static void test_stringtify_list()
 static void test_stringtify_dictionary()
 {
     STRINGTIFY_TEST("de", 2);
-    STRINGTIFY_TEST("d2:k14:str12:k2i2e2:k3li1e4:str2l5:list3ed1:k1:veee", 51);
+    STRINGTIFY_TEST("d"
+                    "2:k14:str1"
+                    "2:k2i2e"
+                    "2:k3"
+                    "l"
+                    "i1e"
+                    "4:str2"
+                    "l"
+                    "5:list3"
+                    "e"
+                    "d"
+                    "1:k1:v"
+                    "e"
+                    "e"
+                    "e",
+                    51);
 }
 
 static void test_stringtify()
@@ -169,7 +213,13 @@ static void test_copy()
     COPY_TEST("5:22\000DA", 7);
     COPY_TEST("5:22CDA", 7);
     COPY_TEST("ll2:abe2:cde", 12);
-    COPY_TEST("d1:ni2e1:s3:str1:ll2:e12:e22:e32:e4e1:dd2:k12:v12:k22:v2ee", 58);
+    COPY_TEST("d"
+              "1:dd2:k12:v12:k22:v2e"
+              "1:ll2:e12:e22:e32:e4e"
+              "1:ni2e"
+              "1:s3:str"
+              "e",
+              58);
 }
 
 static void test_deepcopy_number()
@@ -225,13 +275,25 @@ static void test_deepcopy_list()
 static void test_deepcopy_dictionary()
 {
     fraux_value v1, v2;
-    assert(fraux_parse(&v1, "d1:ni2e1:s3:str1:ll2:e12:e22:e32:e4e1:dd2:k12:v12:k22:v2ee", 58) == FRAUX_PARSE_OK);
+    assert(fraux_parse(&v1, "d"
+                            "1:dd2:k12:v12:k22:v2e"
+                            "1:ll2:e12:e22:e32:e4e"
+                            "1:ni2e"
+                            "1:s3:str"
+                            "e",
+                       58) == FRAUX_PARSE_OK);
     fraux_deepcopy(&v2, &v1);
 
     size_t length;
     char *str = fraux_stringtify(&v2, &length);
     assert(length == 58);
-    assert(memcmp("d1:ni2e1:s3:str1:ll2:e12:e22:e32:e4e1:dd2:k12:v12:k22:v2ee", str, 58) == 0);
+    assert(memcmp("d"
+                  "1:dd2:k12:v12:k22:v2e"
+                  "1:ll2:e12:e22:e32:e4e"
+                  "1:ni2e"
+                  "1:s3:str"
+                  "e",
+                  str, 58) == 0);
 
     assert(memcmp(&v1, &v2, sizeof(fraux_value)) != 0);
     assert(v1.u.d.size == v2.u.d.size);
@@ -244,7 +306,13 @@ static void test_deepcopy_dictionary()
 static void test_equals()
 {
     fraux_value v1, v2, v3;
-    assert(fraux_parse(&v1, "d1:ni2e1:s3:str1:ll2:e12:e22:e32:e4e1:dd2:k12:v12:k22:v2ee", 58) == FRAUX_PARSE_OK);
+    assert(fraux_parse(&v1, "d"
+                            "1:dd2:k12:v12:k22:v2e"
+                            "1:ll2:e12:e22:e32:e4e"
+                            "1:ni2e"
+                            "1:s3:str"
+                            "e",
+                       58) == FRAUX_PARSE_OK);
 
     fraux_copy(&v2, &v1);
     assert(fraux_equals(&v1, &v2));
@@ -252,7 +320,13 @@ static void test_equals()
     fraux_deepcopy(&v2, &v1);
     assert(fraux_equals(&v1, &v2));
 
-    assert(fraux_parse(&v3, "d1:ni2e1:s3:str1:ll2:e12:e22:e32:e4e1:dd2:k12:v12:k22:v3ee", 58) == FRAUX_PARSE_OK);
+    assert(fraux_parse(&v3, "d"
+                            "1:dd2:k12:v12:k22:v3e"
+                            "1:ll2:e12:e22:e32:e4e"
+                            "1:ni2e"
+                            "1:s3:str"
+                            "e",
+                       58) == FRAUX_PARSE_OK);
     assert(!fraux_equals(&v1, &v3));
 
     fraux_clean(&v1);
@@ -352,5 +426,6 @@ int main(int argc, char const *argv[])
     test_value_operation();
     test_list_operation();
     test_dictionary_operation();
+    printf("TEST SUCCESS!\n");
     return 0;
 }

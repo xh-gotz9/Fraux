@@ -21,6 +21,8 @@ typedef struct fraux_context
     } stack;
 } fraux_conext;
 
+static int fraux_dictionary_key_cmp(const fraux_dict_member *m1, const fraux_dict_member *m2);
+
 static int fraux_parse_value(fraux_conext *c, fraux_value *v);
 
 static void *fraux_conext_push(fraux_conext *c, size_t len)
@@ -175,7 +177,15 @@ static int fraux_parse_dictionary(fraux_conext *c, fraux_value *v)
             c->pos++;
             fraux_set_dictionary(v, size);
             if (size > 0)
-                memcpy(v->u.d.e, fraux_conext_pop(c, size * sizeof(fraux_dict_member)), size * (sizeof(fraux_dict_member)));
+            {
+                typedef int (*compare_t)(const void *, const void *);
+                compare_t cmp;
+                cmp = (compare_t)fraux_dictionary_key_cmp;
+                fraux_dict_member *list = fraux_conext_pop(c, size * sizeof(fraux_dict_member));
+                /* members sorted by key in acending order */
+                qsort(list, size, sizeof(fraux_dict_member), cmp);
+                memcpy(v->u.d.e, list, size * (sizeof(fraux_dict_member)));
+            }
             v->u.d.size = size;
             ret = FRAUX_PARSE_OK;
             break;
@@ -533,6 +543,23 @@ void fraux_list_pop(fraux_value *l, fraux_value *e)
     fraux_list_delete(l, l->u.l.size - 1, e);
 }
 
+static int fraux_dictionary_key_cmp(const fraux_dict_member *m1, const fraux_dict_member *m2)
+{
+    assert(m1 != NULL);
+    assert(m2 != NULL);
+
+    int res = memcmp(m1->k.s, m2->k.s, m1->k.len < m2->k.len ? m1->k.len : m2->k.len);
+
+    if (m1->k.len != m2->k.len && res == 0)
+    {
+        return m1->k.len > m2->k.len ? 1 : -1;
+    }
+    else
+    {
+        return res;
+    }
+}
+
 void fraux_dictinary_add(fraux_value *d, fraux_dict_member *m)
 {
     assert(d != NULL);
@@ -545,8 +572,24 @@ void fraux_dictinary_add(fraux_value *d, fraux_dict_member *m)
         dict->e = realloc(dict->e, sizeof(fraux_dict_member) * (dict->capacity + 2));
         dict->capacity += 2;
     }
+    
+    if (dict->size == 0)
+    {
+        goto copy_member;
+    }
 
-    memcpy(dict->e + dict->size, m, sizeof(fraux_dict_member));
+    size_t index = 0;
+    fraux_dict_member *ptr = dict->e;
+    while (index < dict->size && fraux_dictionary_key_cmp(m, ptr) > 0)
+        index++;
+
+    for (size_t i = dict->size - 1; i > index; i--)
+    {
+        memcpy(dict->e + i + 1, dict->e + i, sizeof(fraux_dict_member));
+    }
+
+copy_member:
+    memcpy(dict->e + index, m, sizeof(fraux_dict_member));
     dict->size++;
 }
 
