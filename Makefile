@@ -23,7 +23,7 @@ clean:
 fraux.o: fraux.h fraux.c
 	$(COMPILE_CMD) -fPIC
 
-test: test.h test.c fraux.h fraux.c
+test: test.c fraux.h fraux.c
 	$(BUILD_CMD) $(DEBUG)
 
 check: test
